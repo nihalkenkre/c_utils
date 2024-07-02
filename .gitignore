@@ -1,0 +1,10 @@
+# Executables
+*.exe
+*.dll
+*.obj
+*.exp
+*.lib
+
+# Debug
+*.pdb
+*.ilk
