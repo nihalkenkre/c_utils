@@ -36,5 +36,18 @@ int main()
     bAreEqual = UtilsStrCmpAA(str1, str2);
     bAreEqual = UtilsStrCmpiAA(str1, str2);
 
+    CHAR sFindInStr[] = {'F', 'i', 'n', 'F', 'i', 'f', 's', 't', 'r', 0};
+    CHAR sFindStr[] = {'n', 'F', 'i', 0};
+
+    PCSTR sStrStr = UtilsStrStr(sFindInStr, sFindStr);
+
+    WCHAR wsFindInStr[] = {'F', 'i', 'n', 'F', 'i', 'f', 's', 't', 'r', 0};
+    WCHAR wsFindStr[] = {'n', 'F', 'i', 0};
+
+    PCWSTR wsStrStr = UtilsWStrWStr(wsFindInStr, wsFindStr);
+
+    UtilsStrAppend(dst, sFindInStr);
+    UtilsWStrAppend(wdst, wsFindStr);
+
     return 0;
 }

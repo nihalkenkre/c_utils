@@ -258,10 +258,78 @@ LPVOID UtilsStrChr(PCSTR sStr, int iCh)
     return (LPVOID)-1;
 }
 
-BOOL UtilsStrContains(PCSTR sFindInStr, PCSTR sFindStr)
+PCSTR UtilsStrStr(PCSTR sFindInStr, PCSTR sFindStr)
 {
+    PCSTR offset = NULL;
 
-    return FALSE;
+    for (SIZE_T i = 0; sFindInStr[i] != 0; ++i)
+    {
+        for (SIZE_T j = 0; sFindStr[j] != 0; ++j)
+        {
+            if (sFindInStr[i] == sFindStr[j])
+            {
+                if (offset == NULL)
+                    offset = sFindInStr + i;
+
+                ++i;
+            }
+            else
+            {
+                offset = NULL;
+                break;
+            }
+        }
+        if (offset != NULL)
+        {
+            return offset;
+        }
+    }
+
+    return 0;
+}
+
+PCWSTR UtilsWStrWStr(PCWSTR sFindInStr, PCWSTR sFindStr)
+{
+    PCWSTR offset = NULL;
+
+    for (SIZE_T i = 0; sFindInStr[i] != 0; ++i)
+    {
+        for (SIZE_T j = 0; sFindStr[j] != 0; ++j)
+        {
+            if (sFindInStr[i] == sFindStr[j])
+            {
+                if (offset == NULL)
+                    offset = sFindInStr + i;
+
+                ++i;
+            }
+            else
+            {
+                offset = NULL;
+                break;
+            }
+        }
+        if (offset != NULL)
+        {
+            return offset;
+        }
+    }
+
+    return 0;
+}
+
+void UtilsStrAppend(PSTR sStr, PSTR sApp)
+{
+    PSTR sDst = sStr + UtilsStrLen(sStr);
+
+    UtilsStrCpy(sApp, sDst);
+}
+
+void UtilsWStrAppend(PWSTR wsStr, PWSTR wsApp)
+{
+    PWSTR wsDst = wsStr + UtilsWStrLen(wsStr);
+
+    UtilsWStrCpy(wsApp, wsDst);
 }
 
 void UtilsXor(BYTE *data, SIZE_T data_len, BYTE *key, SIZE_T key_len)
