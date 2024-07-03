@@ -59,17 +59,27 @@ int main()
     (LPVOID lpAddress, SIZE_T dwSize, DWORD flAllocationType, DWORD flProtect) = pGetProcAddress((HMODULE)hKernel, cVirtualAlloc);
 
     CHAR cSprintfBuffer[128];
-    CHAR cString[] = {'M', 'y', '\n', 'n', 'a', 'm', 'e', ':', ' ', '%', 's', 'b', ' ', 'K', 'e', 'n', 'k', 'r', 'e', '\n', 'A', 'g', 'e', ':', ' ', '%', 'x', 0};
+    CHAR cString[] = {'M', 'y', '\n', 'N', 'a', 'm', 'e', ':', ' ', '%', 's', 'w', ' ', 'K', 'e', 'n', 'k', 'r', 'e', '\n', 'A', 'g', 'e', ':', ' ', '%', 'x', 0};
     CHAR cName[] = {'N', 'i', 'h', 'a', 'l', 0};
+    WCHAR wcName[] = {'N', 'i', 'h', 'a', 'l', 0};
     DWORD64 uiAge = 0xDEADBEEFBABECAFE;
 
     SPRINTF_ARGS sprintfArgs;
     sprintfArgs.argsCount = 2;
     sprintfArgs.args = (DWORD64 *)pVirtualAlloc(NULL, sizeof(DWORD64) * sprintfArgs.argsCount, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-    sprintfArgs.args[0] = cName;
+    sprintfArgs.args[0] = wcName;
     sprintfArgs.args[1] = uiAge;
 
     UtilsSprintf(cSprintfBuffer, cString, sprintfArgs);
+
+    WCHAR wcSprintfBuffer[128];
+    WCHAR wcString[] = {'M', 'y', '\n', 'N', 'a', 'm', 'e', ':', ' ', '%', 's', 'b', ' ', 'K', 'e', 'n', 'k', 'r', 'e', '\n', 'A', 'g', 'e', ':', ' ', '%', 'x', 0};
+
+    sprintfArgs.argsCount = 2;
+    sprintfArgs.args[0] = cName;
+    sprintfArgs.args[1] = uiAge;
+
+    UtilsWSprintf(wcSprintfBuffer, wcString, sprintfArgs);
 
     if (sprintfArgs.args != NULL)
     {

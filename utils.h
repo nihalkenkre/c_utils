@@ -139,7 +139,7 @@ SIZE_T UtilsWStrCpy(PCWSTR sSrc, PWSTR sDst)
     return i;
 }
 
-void UtilsWStrCpyA(PCWSTR wsSrc, PSTR sDst)
+SIZE_T UtilsWStrCpyA(PCWSTR wsSrc, PSTR sDst)
 {
     SIZE_T i = 0;
     while (wsSrc[i] != 0)
@@ -148,9 +148,11 @@ void UtilsWStrCpyA(PCWSTR wsSrc, PSTR sDst)
         ++i;
     }
     sDst[i] = (CHAR)wsSrc[i]; // copy trailing 0
+
+    return i;
 }
 
-void UtilsAStrCpyW(PCSTR sSrc, PWSTR wsDst)
+SIZE_T UtilsAStrCpyW(PCSTR sSrc, PWSTR wsDst)
 {
     SIZE_T i = 0;
     while (sSrc[i] != 0)
@@ -159,6 +161,8 @@ void UtilsAStrCpyW(PCSTR sSrc, PWSTR wsDst)
         ++i;
     }
     wsDst[i] = sSrc[i]; // coy trailing 0
+
+    return i;
 }
 
 BOOL UtilsStrCmpAW(PCSTR sStr1, PCWSTR sStr2)
@@ -381,7 +385,7 @@ PSTR UtilsStrDup(PCSTR sStr)
 
     char cVirtualAlloc[] = {0x56, 0x69, 0x72, 0x74, 0x75, 0x61, 0x6c, 0x41, 0x6c, 0x6c, 0x6f, 0x63, 0};
     LPVOID(WINAPI * pVirtualAlloc)
-    (/*Optional*/ LPVOID lpAddress, SIZE_T dwSize, DWORD flAllocationType, DWORD flProtect) = pGetProcAddress(hKernel, cVirtualAlloc);
+    (LPVOID lpAddress, SIZE_T dwSize, DWORD flAllocationType, DWORD flProtect) = pGetProcAddress(hKernel, cVirtualAlloc);
 
     PSTR sDup = pVirtualAlloc(0, sStrLen, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
@@ -413,6 +417,9 @@ void UtilsSprintf(PSTR pBuffer, PSTR pString, SPRINTF_ARGS sprintfArgs)
                 }
                 else if (pString[stringIndex + 2] == 'w')
                 {
+                    PCWSTR arg = (PCWSTR *)sprintfArgs.args[argIndex];
+
+                    bufferIndex += UtilsWStrCpyA(arg, pBuffer + bufferIndex);
                 }
 
                 stringIndex += 3;
@@ -421,7 +428,7 @@ void UtilsSprintf(PSTR pBuffer, PSTR pString, SPRINTF_ARGS sprintfArgs)
             }
             else if (pString[stringIndex + 1] == 'd')
             {
-                char tempString[32];
+                CHAR tempString[32];
                 INT64 tempStringIndex = 0;
 
                 DWORD64 arg = (DWORD64)sprintfArgs.args[argIndex];
@@ -450,11 +457,114 @@ void UtilsSprintf(PSTR pBuffer, PSTR pString, SPRINTF_ARGS sprintfArgs)
             }
             else if (pString[stringIndex + 1] == 'x')
             {
-                char tempString[32];
+                CHAR tempString[32];
                 UtilsMemSet(tempString, 0, 32);
 
                 INT64 tempStringIndex = 0;
-                char cHexDigits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 0};
+                CHAR cHexDigits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 0};
+                DWORD64 arg = (DWORD64)sprintfArgs.args[argIndex];
+                DWORD64 dwMask = 0xF;
+
+                if (arg == 0)
+                {
+                    pBuffer[bufferIndex++] = 0x30;
+                }
+                else
+                {
+                    while (arg > 0)
+                    {
+                        tempString[tempStringIndex++] = cHexDigits[arg & dwMask];
+                        arg >>= 4;
+                    }
+
+                    pBuffer[bufferIndex++] = '0';
+                    pBuffer[bufferIndex++] = 'x';
+                    while (--tempStringIndex >= 0)
+                    {
+                        pBuffer[bufferIndex++] = tempString[tempStringIndex];
+                    }
+                }
+
+                stringIndex += 2;
+                ++argIndex;
+                continue;
+            }
+        }
+        else
+        {
+            pBuffer[bufferIndex++] = pString[stringIndex];
+        }
+        ++stringIndex;
+    }
+
+    pBuffer[bufferIndex] = pString[stringIndex]; // copy trailing zero
+}
+
+void UtilsWSprintf(PWSTR pBuffer, PWSTR pString, SPRINTF_ARGS sprintfArgs)
+{
+    SIZE_T stringIndex = 0;
+    SIZE_T bufferIndex = 0;
+    SIZE_T argIndex = 0;
+
+    while (pString[stringIndex] != 0)
+    {
+        if (pString[stringIndex] == '%')
+        {
+            if (pString[stringIndex + 1] == 's')
+            {
+                if (pString[stringIndex + 2] == 'b')
+                {
+                    PCSTR arg = (PCSTR *)sprintfArgs.args[argIndex];
+
+                    bufferIndex += UtilsAStrCpyW(arg, pBuffer + bufferIndex);
+                }
+                else if (pString[stringIndex + 2] == 'w')
+                {
+                    PCWSTR arg = (PCWSTR *)sprintfArgs.args[argIndex];
+
+                    bufferIndex += UtilsWStrCpy(arg, pBuffer + bufferIndex);
+                }
+
+                stringIndex += 3;
+                ++argIndex;
+                continue;
+            }
+            else if (pString[stringIndex + 1] == 'd')
+            {
+                WCHAR tempString[32];
+                INT64 tempStringIndex = 0;
+
+                DWORD64 arg = (DWORD64)sprintfArgs.args[argIndex];
+
+                if (arg == 0)
+                {
+                    pBuffer[bufferIndex++] = 0x30;
+                }
+                else
+                {
+                    while (arg > 0)
+                    {
+                        tempString[tempStringIndex++] = arg % 10 + 48;
+                        arg /= 10;
+                    }
+
+                    while (--tempStringIndex >= 0)
+                    {
+                        pBuffer[bufferIndex++] = tempString[tempStringIndex];
+                    }
+                }
+
+                stringIndex += 2;
+                ++argIndex;
+                continue;
+            }
+            else if (pString[stringIndex + 1] == 'x')
+            {
+                WCHAR tempString[32];
+                UtilsMemSet(tempString, 0, 32);
+
+                INT64 tempStringIndex = 0;
+                CHAR cHexDigits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 0};
                 DWORD64 arg = (DWORD64)sprintfArgs.args[argIndex];
                 DWORD64 dwMask = 0xF;
 
