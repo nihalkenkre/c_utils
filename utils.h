@@ -64,9 +64,15 @@ typedef enum _SECTION_INHERIT
 } UTILS_SECTION_INHERIT,
     *PUTILS_SECTION_INHERIT;
 
+typedef struct _sprinf_args
+{
+    SIZE_T argsCount;
+    DWORD64 *args;
+} SPRINTF_ARGS, *PSPRINTF_ARGS;
+
 #ifdef UTILS_IMPLEMENTATION
 
-HMODULE UtilsGetKernelModuleHandle(void);
+ULONG_PTR UtilsGetKernelModuleHandle(void);
 LPVOID UtilsGetProcAddressByName(HMODULE hModule, PCSTR cProcName);
 
 void UtilsMemCpy(LPCVOID lpvSrc, LPVOID lpvDst, SIZE_T nBytes)
@@ -107,7 +113,7 @@ SIZE_T UtilsWStrLen(PCWSTR wstr)
     return wstrlen;
 }
 
-void UtilsStrCpy(PCSTR sSrc, PSTR sDst)
+SIZE_T UtilsStrCpy(PCSTR sSrc, PSTR sDst)
 {
     SIZE_T i = 0;
     while (sSrc[i] != 0)
@@ -116,9 +122,11 @@ void UtilsStrCpy(PCSTR sSrc, PSTR sDst)
         ++i;
     }
     sDst[i] = sSrc[i]; // copy trailing 0
+
+    return i;
 }
 
-void UtilsWStrCpy(PCWSTR sSrc, PWSTR sDst)
+SIZE_T UtilsWStrCpy(PCWSTR sSrc, PWSTR sDst)
 {
     SIZE_T i = 0;
     while (sSrc[i] != 0)
@@ -127,6 +135,8 @@ void UtilsWStrCpy(PCWSTR sSrc, PWSTR sDst)
         ++i;
     }
     sDst[i] = sSrc[i]; // copy trailing 0
+
+    return i;
 }
 
 void UtilsWStrCpyA(PCWSTR wsSrc, PSTR sDst)
@@ -383,6 +393,106 @@ PSTR UtilsStrDup(PCSTR sStr)
     return sDup;
 }
 
+void UtilsSprintf(PSTR pBuffer, PSTR pString, SPRINTF_ARGS sprintfArgs)
+{
+    SIZE_T stringIndex = 0;
+    SIZE_T bufferIndex = 0;
+    SIZE_T argIndex = 0;
+
+    while (pString[stringIndex] != 0)
+    {
+        if (pString[stringIndex] == '%')
+        {
+            if (pString[stringIndex + 1] == 's')
+            {
+                if (pString[stringIndex + 2] == 'b')
+                {
+                    PCSTR arg = (PCSTR *)sprintfArgs.args[argIndex];
+
+                    bufferIndex += UtilsStrCpy(arg, pBuffer + bufferIndex);
+                }
+                else if (pString[stringIndex + 2] == 'w')
+                {
+                }
+
+                stringIndex += 3;
+                ++argIndex;
+                continue;
+            }
+            else if (pString[stringIndex + 1] == 'd')
+            {
+                char tempString[32];
+                INT64 tempStringIndex = 0;
+
+                DWORD64 arg = (DWORD64)sprintfArgs.args[argIndex];
+
+                if (arg == 0)
+                {
+                    pBuffer[bufferIndex++] = 0x30;
+                }
+                else
+                {
+                    while (arg > 0)
+                    {
+                        tempString[tempStringIndex++] = arg % 10 + 48;
+                        arg /= 10;
+                    }
+
+                    while (--tempStringIndex >= 0)
+                    {
+                        pBuffer[bufferIndex++] = tempString[tempStringIndex];
+                    }
+                }
+
+                stringIndex += 2;
+                ++argIndex;
+                continue;
+            }
+            else if (pString[stringIndex + 1] == 'x')
+            {
+                char tempString[32];
+                UtilsMemSet(tempString, 0, 32);
+
+                INT64 tempStringIndex = 0;
+                char cHexDigits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 0};
+                DWORD64 arg = (DWORD64)sprintfArgs.args[argIndex];
+                DWORD64 dwMask = 0xF;
+
+                if (arg == 0)
+                {
+                    pBuffer[bufferIndex++] = 0x30;
+                }
+                else
+                {
+                    while (arg > 0)
+                    {
+                        tempString[tempStringIndex++] = cHexDigits[arg & dwMask];
+                        arg >>= 4;
+                    }
+
+                    pBuffer[bufferIndex++] = '0';
+                    pBuffer[bufferIndex++] = 'x';
+                    while (--tempStringIndex >= 0)
+                    {
+                        pBuffer[bufferIndex++] = tempString[tempStringIndex];
+                    }
+                }
+
+                stringIndex += 2;
+                ++argIndex;
+                continue;
+            }
+        }
+        else
+        {
+            pBuffer[bufferIndex++] = pString[stringIndex];
+        }
+        ++stringIndex;
+    }
+
+    pBuffer[bufferIndex] = pString[stringIndex]; // copy trailing zero
+}
+
 LONG RVAToOffset(DWORD rva, IMAGE_SECTION_HEADER *SectionHeaders, WORD SectionHeaderCount)
 {
     for (WORD id = 0; id < SectionHeaderCount; ++id)
@@ -512,7 +622,7 @@ shutdown:
     return NULL;
 }
 
-HMODULE UtilsGetKernelModuleHandle(void)
+ULONG_PTR UtilsGetKernelModuleHandle(void)
 {
 #ifdef _M_X64
     PEB *pPeb = (PEB *)__readgsqword(0x60);
@@ -531,16 +641,16 @@ HMODULE UtilsGetKernelModuleHandle(void)
 
         if (UtilsStrCmpiAW(cKernelDLL, TableEntry->BaseDllName.Buffer))
         {
-            return (HMODULE)TableEntry->pvDllBase;
+            return (ULONG_PTR)TableEntry->pvDllBase;
         }
 
         CurrentListEntry = CurrentListEntry->Flink;
     }
 
-    return NULL;
+    return 0;
 }
 
-LPVOID UtilsGetProcAddressByName(HMODULE ulModuleAddr, PCSTR sProcName)
+LPVOID UtilsGetProcAddressByName(ULONG_PTR ulModuleAddr, PCSTR sProcName)
 {
     IMAGE_DOS_HEADER *DosHeader = (IMAGE_DOS_HEADER *)ulModuleAddr;
     IMAGE_NT_HEADERS *NTHeaders = (IMAGE_NT_HEADERS *)(ulModuleAddr + DosHeader->e_lfanew);
@@ -555,9 +665,9 @@ LPVOID UtilsGetProcAddressByName(HMODULE ulModuleAddr, PCSTR sProcName)
     ULONG_PTR lpvProcAddr = 0;
     for (DWORD n = 0; n < ExportDirectory->NumberOfNames; ++n)
     {
-        if (UtilsStrCmpiAA(sProcName, (PSTR)(ulModuleAddr + AddressOfNames[n])))
+        if (UtilsStrCmpiAA(sProcName, (PCSTR)(ulModuleAddr + AddressOfNames[n])))
         {
-            lpvProcAddr = (ULONG_PTR)ulModuleAddr + (ULONG_PTR)AddressOfFunctions[AddressOfNameOridinals[n]];
+            lpvProcAddr = ulModuleAddr + (ULONG_PTR)AddressOfFunctions[AddressOfNameOridinals[n]];
             break;
         }
     }
