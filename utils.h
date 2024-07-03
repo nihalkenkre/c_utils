@@ -73,7 +73,7 @@ typedef struct _sprinf_args
 #ifdef UTILS_IMPLEMENTATION
 
 ULONG_PTR UtilsGetKernelModuleHandle(void);
-LPVOID UtilsGetProcAddressByName(HMODULE hModule, PCSTR cProcName);
+LPVOID UtilsGetProcAddressByName(ULONG_PTR hModule, PCSTR cProcName);
 
 void UtilsMemCpy(LPCVOID lpvSrc, LPVOID lpvDst, SIZE_T nBytes)
 {
@@ -377,7 +377,7 @@ PSTR UtilsStrDup(PCSTR sStr)
 {
     SIZE_T sStrLen = UtilsStrLen(sStr);
 
-    HMODULE hKernel = UtilsGetKernelModuleHandle();
+    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
 
     char cGetProcAddress[] = {0x47, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x63, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0};
     FARPROC(WINAPI * pGetProcAddress)
@@ -411,13 +411,13 @@ void UtilsSprintf(PSTR pBuffer, PSTR pString, SPRINTF_ARGS sprintfArgs)
             {
                 if (pString[stringIndex + 2] == 'b')
                 {
-                    PCSTR arg = (PCSTR *)sprintfArgs.args[argIndex];
+                    PCSTR arg = (PCSTR)sprintfArgs.args[argIndex];
 
                     bufferIndex += UtilsStrCpy(arg, pBuffer + bufferIndex);
                 }
                 else if (pString[stringIndex + 2] == 'w')
                 {
-                    PCWSTR arg = (PCWSTR *)sprintfArgs.args[argIndex];
+                    PCWSTR arg = (PCWSTR)sprintfArgs.args[argIndex];
 
                     bufferIndex += UtilsWStrCpyA(arg, pBuffer + bufferIndex);
                 }
@@ -514,13 +514,13 @@ void UtilsWSprintf(PWSTR pBuffer, PWSTR pString, SPRINTF_ARGS sprintfArgs)
             {
                 if (pString[stringIndex + 2] == 'b')
                 {
-                    PCSTR arg = (PCSTR *)sprintfArgs.args[argIndex];
+                    PCSTR arg = (PCSTR)sprintfArgs.args[argIndex];
 
                     bufferIndex += UtilsAStrCpyW(arg, pBuffer + bufferIndex);
                 }
                 else if (pString[stringIndex + 2] == 'w')
                 {
-                    PCWSTR arg = (PCWSTR *)sprintfArgs.args[argIndex];
+                    PCWSTR arg = (PCWSTR)sprintfArgs.args[argIndex];
 
                     bufferIndex += UtilsWStrCpy(arg, pBuffer + bufferIndex);
                 }
@@ -625,11 +625,49 @@ BOOL IsImportDescriptorZero(IMAGE_IMPORT_DESCRIPTOR ImportDirectory)
            ImportDirectory.FirstThunk == 0;
 }
 
+void UtilsPrintConsole(PCSTR pString)
+{
+    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
+
+    char cGetProcAddress[] = {0x47, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x63, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0};
+    FARPROC(WINAPI * pGetProcAddress)
+    (HMODULE hModule, LPCSTR lpProcName) = UtilsGetProcAddressByName(hKernel, cGetProcAddress);
+
+    char cGetStdHandle[] = {'G', 'e', 't', 'S', 't', 'd', 'H', 'a', 'n', 'd', 'l', 'e', 0};
+    HANDLE(WINAPI * pGetStdHandle)
+    (DWORD nStdHandle) = pGetProcAddress(hKernel, cGetStdHandle);
+
+    char cWriteFile[] = {'W', 'r', 'i', 't', 'e', 'F', 'i', 'l', 'e', 0};
+    BOOL(WINAPI * pWriteFile)
+    (HANDLE hFile, LPCVOID lpbuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped) = pGetProcAddress(hKernel, cWriteFile);
+
+    pWriteFile(pGetStdHandle(-11), pString, UtilsStrLen(pString), NULL, NULL);
+}
+
+void UtilsWPrintConsole(PCWSTR pWString)
+{
+    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
+
+    char cGetProcAddress[] = {0x47, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x63, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0};
+    FARPROC(WINAPI * pGetProcAddress)
+    (HMODULE hModule, LPCSTR lpProcName) = UtilsGetProcAddressByName(hKernel, cGetProcAddress);
+
+    char cGetStdHandle[] = {'G', 'e', 't', 'S', 't', 'd', 'H', 'a', 'n', 'd', 'l', 'e', 0};
+    HANDLE(WINAPI * pGetStdHandle)
+    (DWORD nStdHandle) = pGetProcAddress(hKernel, cGetStdHandle);
+
+    char cWriteFile[] = {'W', 'r', 'i', 't', 'e', 'F', 'i', 'l', 'e', 0};
+    BOOL(WINAPI * pWriteFile)
+    (HANDLE hFile, LPCVOID lpbuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped) = pGetProcAddress(hKernel, cWriteFile);
+
+    pWriteFile(pGetStdHandle(-11), pWString, UtilsWStrLen(pWString) * sizeof(WCHAR), NULL, NULL);
+}
+
 DWORD FindTargetProcessID(PSTR sTargetName)
 {
     DWORD dwRetVal = -1;
 
-    HMODULE hKernel = UtilsGetKernelModuleHandle();
+    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
 
     char cGetProcAddress[] = {0x47, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x63, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0};
     FARPROC(WINAPI * pGetProcAddress)
