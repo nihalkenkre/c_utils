@@ -131,28 +131,6 @@ BOOL UtilsProcess32Next(HANDLE hSnapshot, LPPROCESSENTRY32 lppe)
     return pProcess32Next(hSnapshot, lppe);
 }
 
-BOOL UtilsThread32First(HANDLE hSnapshot, LPTHREADENTRY32 lppe)
-{
-    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
-
-    CHAR cThread32First[] = {0x54, 0x68, 0x72, 0x65, 0x61, 0x64, 0x33, 0x32, 0x46, 0x69, 0x72, 0x73, 0x74, 0};
-    BOOL(WINAPI * pThread32First)
-    (HANDLE hSnapshot, LPTHREADENTRY32 lppe) = UtilsGetProcAddressByName(hKernel, cThread32First);
-
-    return pThread32First(hSnapshot, lppe);
-}
-
-BOOL UtilsThread32Next(HANDLE hSnapshot, LPTHREADENTRY32 lppe)
-{
-    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
-
-    CHAR cThread32Next[] = {0x54, 0x68, 0x72, 0x65, 0x61, 0x64, 0x33, 0x32, 0x46, 0x69, 0x72, 0x73, 0x74, 0};
-    BOOL(WINAPI * pThread32Next)
-    (HANDLE hSnapshot, LPTHREADENTRY32 lppe) = UtilsGetProcAddressByName(hKernel, cThread32Next);
-
-    return pThread32Next(hSnapshot, lppe);
-}
-
 BOOL UtilsCloseHandle(HANDLE hHandle)
 {
     ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
@@ -726,19 +704,6 @@ void UtilsWSprintf(PWSTR pBuffer, PWSTR pString, SPRINTF_ARGS sprintfArgs)
     pBuffer[bufferIndex] = pString[stringIndex]; // copy trailing zero
 }
 
-LONG RVAToOffset(DWORD rva, IMAGE_SECTION_HEADER *SectionHeaders, WORD SectionHeaderCount)
-{
-    for (WORD id = 0; id < SectionHeaderCount; ++id)
-    {
-        if (rva >= SectionHeaders[id].VirtualAddress && rva < SectionHeaders[id].VirtualAddress + SectionHeaders[id].SizeOfRawData)
-        {
-            return rva - SectionHeaders[id].VirtualAddress + SectionHeaders[id].PointerToRawData;
-        }
-    }
-
-    return -1;
-}
-
 void UtilsPrintConsole(PCSTR pString)
 {
     UtilsWriteFile(UtilsGetStdHandle(-11), pString, (DWORD)UtilsStrLen(pString), NULL, NULL);
@@ -749,13 +714,13 @@ void UtilsWPrintConsole(PCWSTR pWString)
     UtilsWriteFile(UtilsGetStdHandle(-11), pWString, (DWORD)UtilsWStrLen(pWString) * sizeof(WCHAR), NULL, NULL);
 }
 
-DWORD FindTargetProcessID(PSTR sTargetName)
+DWORD UtilsFindTargetProcessID(PSTR sTargetName)
 {
     DWORD dwRetVal = -1;
 
-    HANDLE hSnapShot = UtilsCreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    HANDLE hSnapshot = UtilsCreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 
-    if (hSnapShot == INVALID_HANDLE_VALUE)
+    if (hSnapshot == INVALID_HANDLE_VALUE)
     {
         return dwRetVal;
     }
@@ -763,54 +728,26 @@ DWORD FindTargetProcessID(PSTR sTargetName)
     PROCESSENTRY32 ProcessEntry;
     ProcessEntry.dwSize = sizeof(PROCESSENTRY32);
 
-    if (!UtilsProcess32First(hSnapShot, &ProcessEntry))
+    if (!UtilsProcess32First(hSnapshot, &ProcessEntry))
     {
         goto shutdown;
     }
 
-    while (UtilsProcess32Next(hSnapShot, &ProcessEntry))
+    do
     {
         if (UtilsStrCmpiAA(sTargetName, ProcessEntry.szExeFile))
         {
+            UtilsCloseHandle(hSnapshot);
             return ProcessEntry.th32ProcessID;
         }
-    }
+    } while (UtilsProcess32Next(hSnapshot, &ProcessEntry));
 
 shutdown:
 
+    UtilsCloseHandle(hSnapshot);
     return dwRetVal;
 }
 
-HANDLE FindProcessThread(DWORD dwPid)
-{
-    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
-
-    HANDLE hSnapShot = UtilsCreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
-
-    if (hSnapShot == NULL)
-    {
-        goto shutdown;
-    }
-
-    THREADENTRY32 ThreadEntry;
-    ThreadEntry.dwSize = sizeof(THREADENTRY32);
-
-    if (!UtilsThread32First(hSnapShot, &ThreadEntry))
-    {
-        goto shutdown;
-    }
-
-    while (UtilsThread32Next(hSnapShot, &ThreadEntry))
-    {
-        if (ThreadEntry.th32OwnerProcessID == dwPid)
-        {
-            return UtilsOpenThread(THREAD_ALL_ACCESS, FALSE, ThreadEntry.th32ThreadID);
-        }
-    }
-
-shutdown:
-    return NULL;
-}
 
 ULONG_PTR UtilsGetKernelModuleHandle(void)
 {
@@ -862,7 +799,6 @@ LPVOID UtilsGetProcAddressByName(ULONG_PTR ulModuleAddr, PCSTR sProcName)
         }
     }
 
-    // Code to get address of forwarded functions
     if ((lpvProcAddr > (ulModuleAddr + ExportDataDirectory.VirtualAddress)) && (lpvProcAddr <= (ulModuleAddr + ExportDataDirectory.VirtualAddress + ExportDataDirectory.Size)))
     {
         CHAR DLLFunctionName[256];

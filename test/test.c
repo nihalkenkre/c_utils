@@ -74,5 +74,7 @@ int main()
     UtilsPrintConsole(cSprintfBuffer);
     UtilsWPrintConsole(wcSprintfBuffer);
 
+    DWORD dwTargetPid = UtilsFindTargetProcessID("notepad.exe");
+
     return 0;
 }
