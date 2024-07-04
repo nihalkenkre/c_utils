@@ -186,6 +186,62 @@ BOOL UtilsVirtualFree(LPVOID lpAddress, SIZE_T dwSize, DWORD dwFreeType)
     return pVirtualFree(lpAddress, 0, MEM_RELEASE);
 }
 
+INT UtilsWideCharToMultiByte(UINT CodePage, DWORD dwFlags, LPCWCH lpWideCharStr, int cchWideChar, LPSTR lpMultiByteStr, int cbMultiByte, LPCCH lpDefaultChar, LPBOOL lpUseDefaultChar)
+{
+    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
+
+    CHAR cWideCharToMultiByte[] = {0x57, 0x69, 0x64, 0x65, 0x43, 0x68, 0x61, 0x72, 0x54, 0x6f, 0x4d, 0x75, 0x6c, 0x74, 0x69, 0x42, 0x79, 0x74, 0x65, 0};
+    INT(WINAPI * pWideCharToMultiByte)
+    (UINT CodePage, DWORD dwFlags, LPCWCH lpWideCharStr, int cchWideChar, LPSTR lpMultiByteStr, int cbMultiByte, LPCCH lpDefaultChar, LPBOOL lpUseDefaultChar) = UtilsGetProcAddressByName(hKernel, cWideCharToMultiByte);
+
+    return pWideCharToMultiByte(CodePage, dwFlags, lpWideCharStr, cchWideChar, lpMultiByteStr, cbMultiByte, lpDefaultChar, lpUseDefaultChar);
+}
+
+HANDLE UtilsCreateFile(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwSharedMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)
+{
+    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
+
+    CHAR cCreateFileA[] = {0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x46, 0x69, 0x6c, 0x65, 0x41, 0};
+    HANDLE(WINAPI * pCreateFileA)
+    (LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwSharedMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile) = UtilsGetProcAddressByName(hKernel, cCreateFileA);
+
+    return pCreateFileA(lpFileName, dwDesiredAccess, dwSharedMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
+}
+
+HANDLE UtilsGetModuleHandleA(LPCSTR lpModuleName)
+{
+    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
+
+    CHAR cGetModuleHandleA[] = {0x47, 0x65, 0x74, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x48, 0x61, 0x6e, 0x64, 0x6c, 0x65, 0x41, 0};
+    HMODULE(WINAPI * pGetModuleHandleA)
+    (LPCSTR lpModuleName) = UtilsGetProcAddressByName(hKernel, cGetModuleHandleA);
+
+    return pGetModuleHandleA(lpModuleName);
+}
+
+PVOID UtilsImageDirectoryEntryToDataEx(PVOID Base, BOOLEAN MappedAsImage, USHORT DirectoryEntry, PULONG Size, PIMAGE_SECTION_HEADER *FoundHeader)
+{
+    CHAR cDbgHelp[] = {0x44, 0x62, 0x67, 0x48, 0x65, 0x6c, 0x70, 0};
+    HMODULE hDbgHelp = UtilsLoadLibraryA(cDbgHelp);
+
+    CHAR cImageDirectoryEntryToDataEx[] = {0x49, 0x6d, 0x61, 0x67, 0x65, 0x44, 0x69, 0x72, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x54, 0x6f, 0x44, 0x61, 0x74, 0x61, 0x45, 0x78, 0};
+    PVOID(WINAPI * pImageDirectoryEntryToDataEx)
+    (PVOID Base, BOOLEAN MappedAsImage, USHORT DirectoryEntry, PULONG Size, PIMAGE_SECTION_HEADER * FoundHeader) = UtilsGetProcAddressByName(hDbgHelp, cImageDirectoryEntryToDataEx);
+
+    return pImageDirectoryEntryToDataEx(Base, MappedAsImage, DirectoryEntry, Size, FoundHeader);
+}
+
+BOOL UtilsVirtualProtect(LPVOID lpAddress, SIZE_T dwSize, DWORD flNewProtect, PDWORD lpfOldProtect)
+{
+    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
+
+    CHAR cVirtualProtect[] = {0x56, 0x69, 0x72, 0x74, 0x75, 0x61, 0x6c, 0x50, 0x72, 0x6f, 0x74, 0x65, 0x63, 0x74, 0};
+    BOOL(WINAPI * pVirtualProtect)
+    (LPVOID lpAddress, SIZE_T dwSize, DWORD flNewProtect, PDWORD lpfOldProtect) = UtilsGetProcAddressByName(hKernel, cVirtualProtect);
+
+    return pVirtualProtect(lpAddress, dwSize, flNewProtect, lpfOldProtect);
+}
+
 void UtilsMemCpy(LPCVOID lpvSrc, LPVOID lpvDst, SIZE_T nBytes)
 {
     for (SIZE_T i = 0; i < nBytes; ++i)
@@ -747,7 +803,6 @@ shutdown:
     UtilsCloseHandle(hSnapshot);
     return dwRetVal;
 }
-
 
 ULONG_PTR UtilsGetKernelModuleHandle(void)
 {
