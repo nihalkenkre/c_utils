@@ -296,7 +296,7 @@ void UtilsSleep(DWORD dwMilliseconds)
     pSleep(dwMilliseconds);
 }
 
-void UtilsOutpuDebugStringA(LPCSTR lpOutputString)
+void UtilsOutputDebugStringA(LPCSTR lpOutputString)
 {
     ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
 
