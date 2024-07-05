@@ -194,7 +194,7 @@ BOOL UtilsWriteProcessMemory(HANDLE hProcess, LPVOID lpBaseAddress, LPCVOID lpBu
     ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
 
     BOOL(WINAPI * pWriteProcessMemory)
-    (HANDLE hProcess, LPVOID lpBaseAddress, LPCVOID lpBuffer, SIZE_T nSize, SIZE_T * lpNumberOfBytesWritten) = UtilsGetProcAddressByHash(hKernel, 0x1387cc618);
+    (HANDLE hProcess, LPVOID lpBaseAddress, LPCVOID lpBuffer, SIZE_T nSize, SIZE_T * lpNumberOfBytesWritten) = UtilsGetProcAddressByHash(hKernel, 0x16e0035c5);
 
     return pWriteProcessMemory(hProcess, lpBaseAddress, lpBuffer, nSize, lpNumberOfBytesWritten);
 }

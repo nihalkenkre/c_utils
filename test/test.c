@@ -74,6 +74,8 @@ int main()
     UtilsPrintConsole(cSprintfBuffer);
     UtilsWPrintConsole(wcSprintfBuffer);
 
+    DWORD64 dwHash = UtilsStrHash("notepad.exe");
+
     DWORD dwTargetPid = UtilsFindTargetProcessIDByName("notepad.exe");
     dwTargetPid = UtilsFindTargetProcessIDByHash(0x144493d93);
 
