@@ -74,16 +74,8 @@ int main()
     UtilsPrintConsole(cSprintfBuffer);
     UtilsWPrintConsole(wcSprintfBuffer);
 
-    // DWORD dwTargetPid = UtilsFindTargetProcessID("notepad.exe");
-
-    WCHAR cKernel[] = L"kernel32.dll";
-    DWORD64 dwHash = UtilsWStrHash(cKernel);
-
-    WCHAR cVirtualAlloc[] = L"VirtualAlloc";
-    dwHash = UtilsWStrHash(cVirtualAlloc);
-
-    WCHAR cImageDirectoryEntryToDataEx[] = L"ImageDirectoryEntryToDataEx";
-    dwHash = UtilsWStrHash(cImageDirectoryEntryToDataEx);
+    DWORD dwTargetPid = UtilsFindTargetProcessIDByName("notepad.exe");
+    dwTargetPid = UtilsFindTargetProcessIDByHash(0x144493d93);
 
     ULONG_PTR ulKernel = UtilsGetKernelModuleHandle();
     LPVOID lpvProcAddr = UtilsGetProcAddressByHash(ulKernel, 0x138374e18);

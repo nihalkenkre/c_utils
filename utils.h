@@ -816,7 +816,7 @@ void UtilsWPrintConsole(PCWSTR pWString)
     UtilsWriteFile(UtilsGetStdHandle(-11), pWString, (DWORD)UtilsWStrLen(pWString) * sizeof(WCHAR), NULL, NULL);
 }
 
-DWORD UtilsFindTargetProcessID(PSTR sTargetName)
+DWORD UtilsFindTargetProcessIDByName(PSTR sTargetName)
 {
     DWORD dwRetVal = -1;
 
@@ -838,6 +838,41 @@ DWORD UtilsFindTargetProcessID(PSTR sTargetName)
     do
     {
         if (UtilsStrCmpiAA(sTargetName, ProcessEntry.szExeFile))
+        {
+            UtilsCloseHandle(hSnapshot);
+            return ProcessEntry.th32ProcessID;
+        }
+    } while (UtilsProcess32Next(hSnapshot, &ProcessEntry));
+
+shutdown:
+
+    UtilsCloseHandle(hSnapshot);
+    return dwRetVal;
+}
+
+DWORD UtilsFindTargetProcessIDByHash(DWORD64 dwProcNameHash)
+{
+    DWORD dwRetVal = -1;
+
+    HANDLE hSnapshot = UtilsCreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+
+    if (hSnapshot == INVALID_HANDLE_VALUE)
+    {
+        return dwRetVal;
+    }
+
+    PROCESSENTRY32 ProcessEntry;
+    ProcessEntry.dwSize = sizeof(PROCESSENTRY32);
+
+    if (!UtilsProcess32First(hSnapshot, &ProcessEntry))
+    {
+        goto shutdown;
+    }
+
+    do
+    {
+        DWORD64 dwHash = UtilsStrHash(ProcessEntry.szExeFile);
+        if (dwProcNameHash == dwHash)
         {
             UtilsCloseHandle(hSnapshot);
             return ProcessEntry.th32ProcessID;
