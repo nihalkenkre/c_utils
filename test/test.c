@@ -76,5 +76,14 @@ int main()
 
     DWORD dwTargetPid = UtilsFindTargetProcessID("notepad.exe");
 
+    WCHAR cKernel[] = L"kernel32.dll";
+    DWORD64 dwHash = UtilsWHash(cKernel);
+
+    WCHAR cVirtualAlloc[] = L"VirtualAlloc";
+    dwHash = UtilsWHash(cVirtualAlloc);
+
+    WCHAR cImageDirectoryEntryToDataEx[] = L"ImageDirectoryEntryToDataEx";
+    dwHash = UtilsWHash(cImageDirectoryEntryToDataEx);
+
     return 0;
 }

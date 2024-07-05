@@ -270,7 +270,7 @@ PVOID UtilsImageDirectoryEntryToDataEx(PVOID Base, BOOLEAN MappedAsImage, USHORT
 
     CHAR cImageDirectoryEntryToDataEx[] = {0x49, 0x6d, 0x61, 0x67, 0x65, 0x44, 0x69, 0x72, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x54, 0x6f, 0x44, 0x61, 0x74, 0x61, 0x45, 0x78, 0};
     PVOID(WINAPI * pImageDirectoryEntryToDataEx)
-    (PVOID Base, BOOLEAN MappedAsImage, USHORT DirectoryEntry, PULONG Size, PIMAGE_SECTION_HEADER * FoundHeader) = UtilsGetProcAddressByName(hDbgHelp, cImageDirectoryEntryToDataEx);
+    (PVOID Base, BOOLEAN MappedAsImage, USHORT DirectoryEntry, PULONG Size, PIMAGE_SECTION_HEADER * FoundHeader) = UtilsGetProcAddressByName((ULONG_PTR)hDbgHelp, cImageDirectoryEntryToDataEx);
 
     return pImageDirectoryEntryToDataEx(Base, MappedAsImage, DirectoryEntry, Size, FoundHeader);
 }
@@ -934,4 +934,75 @@ LPVOID UtilsGetProcAddressByName(ULONG_PTR ulModuleAddr, PCSTR sProcName)
     return (LPVOID)lpvProcAddr;
 }
 
+DWORD64 UtilsHash(PCSTR sString)
+{
+    SIZE_T sStrlen = UtilsStrLen(sString);
+    UINT64 i = 0;
+    DWORD64 dwHash = 0;
+
+    while (i < sStrlen)
+    {
+        DWORD64 dwCurrentFold = sString[i];
+        dwCurrentFold <<= 8;
+
+        if (i + 1 < sStrlen)
+        {
+            dwCurrentFold |= sString[i + 1];
+            dwCurrentFold <<= 8;
+        }
+
+        if (i + 2 < sStrlen)
+        {
+            dwCurrentFold |= sString[i + 2];
+            dwCurrentFold <<= 8;
+        }
+
+        if (i + 3 < sStrlen)
+        {
+            dwCurrentFold |= sString[i + 3];
+        }
+
+        dwHash += dwCurrentFold;
+
+        i += 4;
+    }
+
+    return dwHash;
+}
+
+DWORD64 UtilsWHash(PCWSTR sString)
+{
+    SIZE_T sStrlen = UtilsWStrLen(sString);
+    UINT64 i = 0;
+    DWORD64 dwHash = 0;
+
+    while (i < sStrlen)
+    {
+        DWORD64 dwCurrentFold = sString[i];
+        dwCurrentFold <<= 8;
+
+        if (i + 1 < sStrlen)
+        {
+            dwCurrentFold |= sString[i + 1];
+            dwCurrentFold <<= 8;
+        }
+
+        if (i + 2 < sStrlen)
+        {
+            dwCurrentFold |= sString[i + 2];
+            dwCurrentFold <<= 8;
+        }
+
+        if (i + 3 < sStrlen)
+        {
+            dwCurrentFold |= sString[i + 3];
+        }
+
+        dwHash += dwCurrentFold;
+
+        i += 4;
+    }
+
+    return dwHash;
+}
 #endif // UITLS_IMPLEMENTATION
