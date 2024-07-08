@@ -816,7 +816,7 @@ void UtilsWPrintConsole(PCWSTR pWString)
     UtilsWriteFile(UtilsGetStdHandle(-11), pWString, (DWORD)UtilsWStrLen(pWString) * sizeof(WCHAR), NULL, NULL);
 }
 
-DWORD UtilsFindTargetProcessIDByName(PSTR sTargetName)
+DWORD UtilsFindTargetPIDByName(PSTR sTargetName)
 {
     DWORD dwRetVal = -1;
 
@@ -850,7 +850,7 @@ shutdown:
     return dwRetVal;
 }
 
-DWORD UtilsFindTargetProcessIDByHash(DWORD64 dwProcNameHash)
+DWORD UtilsFindTargetPIDByHash(DWORD64 dwProcNameHash)
 {
     DWORD dwRetVal = -1;
 
@@ -883,6 +883,35 @@ shutdown:
 
     UtilsCloseHandle(hSnapshot);
     return dwRetVal;
+}
+
+ULONG_PTR UtilsGetNtdllModuleHandle(void)
+{
+#ifdef _M_X64
+    PEB *pPeb = (PEB *)__readgsqword(0x60);
+#else
+    PEB *pPeb = (PEB *)__readfsdword(0x30);
+#endif
+
+    LIST_ENTRY *FirstListEntry = &pPeb->Ldr->InMemoryOrderModuleList;
+    LIST_ENTRY *CurrentListEntry = FirstListEntry->Flink;
+
+    DWORD64 dwNtdllHash = 0xdaa334d8;
+
+    while (CurrentListEntry != FirstListEntry)
+    {
+        UTILS_LDR_DATA_TABLE_ENTRY *TableEntry = (UTILS_LDR_DATA_TABLE_ENTRY *)((ULONG_PTR)CurrentListEntry - sizeof(LIST_ENTRY));
+
+        DWORD64 dwHash = UtilsWStrHash(TableEntry->BaseDllName.Buffer);
+        if (dwHash == dwNtdllHash)
+        {
+            return (ULONG_PTR)TableEntry->pvDllBase;
+        }
+
+        CurrentListEntry = CurrentListEntry->Flink;
+    }
+
+    return 0;
 }
 
 ULONG_PTR UtilsGetKernelModuleHandle(void)

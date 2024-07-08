@@ -74,15 +74,17 @@ int main()
     UtilsPrintConsole(cSprintfBuffer);
     UtilsWPrintConsole(wcSprintfBuffer);
 
-    DWORD64 dwHash = UtilsStrHash("notepad.exe");
+    DWORD dwTargetPid = UtilsFindTargetPIDByName((CHAR[]){'n', 'o', 't', 'e', 'p', 'a', 'd', '.', 'e', 'x', 'e', 0});
 
-    DWORD dwTargetPid = UtilsFindTargetProcessIDByName("notepad.exe");
-    dwTargetPid = UtilsFindTargetProcessIDByHash(0x144493d93);
+    DWORD64 dwHash = UtilsStrHash((CHAR[]){'n', 'o', 't', 'e', 'p', 'a', 'd', '.', 'e', 'x', 'e', 0});
+    dwTargetPid = UtilsFindTargetPIDByHash(0x144493d93);
 
     ULONG_PTR ulKernel = UtilsGetKernelModuleHandle();
     LPVOID lpvProcAddr = UtilsGetProcAddressByHash(ulKernel, 0x138374e18);
     lpvProcAddr = UtilsGetProcAddressByHash(ulKernel, 0x1055647d1);
     lpvProcAddr = UtilsGetProcAddressByHash(ulKernel, 0x25290982b);
+
+    ULONG_PTR ulNtdll = UtilsGetNtdllModuleHandle();
 
     return 0;
 }
