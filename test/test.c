@@ -71,8 +71,8 @@ int main()
 
     UtilsWSprintf(wcSprintfBuffer, wcString, sprintfArgs);
 
-    UtilsPrintConsole(cSprintfBuffer);
-    UtilsWPrintConsole(wcSprintfBuffer);
+    UtilsWriteFile(UtilsGetStdHandle(STD_OUTPUT_HANDLE), cSprintfBuffer, (DWORD)UtilsStrLen(cSprintfBuffer), NULL, NULL);
+    UtilsWriteFile(UtilsGetStdHandle(STD_OUTPUT_HANDLE), wcSprintfBuffer, (DWORD)UtilsWStrLen(wcSprintfBuffer) * sizeof(WCHAR), NULL, NULL);
 
     DWORD dwTargetPid = UtilsFindTargetPIDByName((CHAR[]){'n', 'o', 't', 'e', 'p', 'a', 'd', '.', 'e', 'x', 'e', 0});
 

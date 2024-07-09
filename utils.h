@@ -816,16 +816,6 @@ void UtilsWSprintf(PWSTR pBuffer, PWSTR pString, SPRINTF_ARGS sprintfArgs)
     pBuffer[bufferIndex] = pString[stringIndex]; // copy trailing zero
 }
 
-void UtilsPrintConsole(PCSTR pString)
-{
-    UtilsWriteFile(UtilsGetStdHandle(-11), pString, (DWORD)UtilsStrLen(pString), NULL, NULL);
-}
-
-void UtilsWPrintConsole(PCWSTR pWString)
-{
-    UtilsWriteFile(UtilsGetStdHandle(-11), pWString, (DWORD)UtilsWStrLen(pWString) * sizeof(WCHAR), NULL, NULL);
-}
-
 DWORD UtilsFindTargetPIDByName(PSTR sTargetName)
 {
     DWORD dwRetVal = -1;
