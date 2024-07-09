@@ -23,13 +23,6 @@ typedef struct _peb
     UTILS_PEB_LDR_DATA *Ldr;
 } UTILS_PEB;
 
-typedef struct _unicode_string
-{
-    USHORT Length;
-    USHORT MaxLength;
-    PWSTR Buffer;
-} UTILS_UNICODE_STRING, *PUTILS_UNICODE_STRING;
-
 typedef struct _ldr_data_table_entry
 {
 #ifdef _M_X64
@@ -43,15 +36,15 @@ typedef struct _ldr_data_table_entry
     PVOID EntryPoint;
     DWORD32 SizeOfImage;
 #endif
-    UTILS_UNICODE_STRING FullDllName;
-    UTILS_UNICODE_STRING BaseDllName;
+    UNICODE_STRING FullDllName;
+    UNICODE_STRING BaseDllName;
 } UTILS_LDR_DATA_TABLE_ENTRY;
 
 typedef struct _object_attributes
 {
     ULONG Length;
     HANDLE RootDirectory;
-    PUTILS_UNICODE_STRING ObjectName;
+    PUNICODE_STRING ObjectName;
     ULONG Attributes;
     PVOID SecurityDescriptor;
     PVOID SecurityQualityOfService;
@@ -327,6 +320,16 @@ void UtilsOutputDebugStringA(LPCSTR lpOutputString)
 
     pOutputDebugStringA(lpOutputString);
 }
+
+void UtilsOutputDebugStringW(LPCWSTR lpOutputString)
+{
+    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
+
+    void(WINAPI * pOutputDebugStringW)(LPCWSTR lpOutputString) = UtilsGetProcAddressByHash(hKernel, 0x19c38e096);
+
+    pOutputDebugStringW(lpOutputString);
+}
+
 
 void UtilsMemCpy(LPCVOID lpvSrc, LPVOID lpvDst, SIZE_T nBytes)
 {
@@ -664,8 +667,21 @@ void UtilsSprintf(PSTR pBuffer, PSTR pString, SPRINTF_ARGS sprintfArgs)
 
                     bufferIndex += UtilsWStrCpyA(arg, pBuffer + bufferIndex);
                 }
+                else
+                {
+                    continue;
+                }
 
                 stringIndex += 3;
+                ++argIndex;
+                continue;
+            }
+            else if (pString[stringIndex + 1] == 'U')
+            {
+                PUNICODE_STRING puString = (PUNICODE_STRING)sprintfArgs.args[argIndex];
+                bufferIndex += UtilsWStrCpyA(puString->Buffer, pBuffer + bufferIndex);
+
+                stringIndex += 2;
                 ++argIndex;
                 continue;
             }
@@ -769,6 +785,15 @@ void UtilsWSprintf(PWSTR pBuffer, PWSTR pString, SPRINTF_ARGS sprintfArgs)
                 }
 
                 stringIndex += 3;
+                ++argIndex;
+                continue;
+            }
+            else if (pString[stringIndex + 1] == 'U')
+            {
+                PUNICODE_STRING puString = (PUNICODE_STRING)sprintfArgs.args[argIndex];
+                bufferIndex += UtilsWStrCpy(puString->Buffer, pBuffer + bufferIndex);
+
+                stringIndex += 2;
                 ++argIndex;
                 continue;
             }

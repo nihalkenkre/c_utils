@@ -92,5 +92,18 @@ int main()
     UtilsWriteConsoleA(UtilsGetStdHandle(STD_OUTPUT_HANDLE), "1 or 2: ", 10, &dwBytes, NULL);
     UtilsReadConsoleA(UtilsGetStdHandle(STD_INPUT_HANDLE), cInput, MAX_PATH, &dwBytes, NULL);
 
+    WCHAR wcDude[] = {'D', 'u', 'd', 'e', 0};
+    UNICODE_STRING uString;
+    uString.Buffer = wcDude;
+    uString.Length = (USHORT)UtilsWStrLen(wcDude) * sizeof(WCHAR) + 2;
+    uString.MaximumLength = uString.Length + 2;
+
+    WCHAR wcDudeString[] = {'%', 'U', '\n', 0};
+    sprintfArgs.args[0] = &uString;
+
+    CHAR cUnicodeTest[] = {'%', 'U', 0};
+    UtilsSprintf(cSprintfBuffer, cUnicodeTest, sprintfArgs);
+    UtilsOutputDebugStringA(cSprintfBuffer);
+
     return 0;
 }
