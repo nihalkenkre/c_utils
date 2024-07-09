@@ -87,7 +87,11 @@ int main()
     ULONG_PTR ulNtdll = UtilsGetNtdllModuleHandle();
 
     DWORD32 dwInput = 0;
-    UtilsReadFile(UtilsGetStdHandle(STD_INPUT_HANDLE), &dwInput, 1, NULL, NULL);
+    DWORD dwBytes = 0;
+    // UtilsReadFile(UtilsGetStdHandle(STD_INPUT_HANDLE), &dwInput, 1, &dwBytes, NULL);
+
+    UtilsWriteConsoleA(UtilsGetStdHandle(STD_OUTPUT_HANDLE), "1 or 2: ", 10, &dwBytes, NULL);
+    UtilsReadConsoleA(UtilsGetStdHandle(STD_INPUT_HANDLE), &dwInput, 1, &dwBytes, NULL);
 
     return 0;
 }

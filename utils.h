@@ -99,6 +99,16 @@ HANDLE UtilsOpenProcess(DWORD dwDesiredAccess, BOOL bInheritHandle, DWORD dwProc
     return pOpenProcess(dwDesiredAccess, bInheritHandle, dwProcessId);
 }
 
+BOOL UtilsReadFile(HANDLE hFile, LPVOID lpvBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped)
+{
+    ULONG_PTR ulKernel = UtilsGetKernelModuleHandle();
+
+    BOOL(WINAPI * pReadFile)
+    (HANDLE hFile, LPVOID lpvBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped) = UtilsGetProcAddressByHash(ulKernel, 0x98cecdc9);
+
+    return pReadFile(hFile, lpvBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
+}
+
 BOOL UtilsWriteFile(HANDLE hFile, LPCVOID lpcvBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOveralapped)
 {
     ULONG_PTR uiKernel = UtilsGetKernelModuleHandle();
@@ -109,14 +119,24 @@ BOOL UtilsWriteFile(HANDLE hFile, LPCVOID lpcvBuffer, DWORD nNumberOfBytesToWrit
     return pWriteFile(hFile, lpcvBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOveralapped);
 }
 
-BOOL UtilsReadFile(HANDLE hFile, LPVOID lpvBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped)
+BOOL UtilsReadConsoleA(HANDLE hConsoleInput, LPVOID lpvBuffer, DWORD nNumberOfCharsToRead, LPDWORD lpNumberOfCharsRead, LPVOID pInputControl)
 {
     ULONG_PTR ulKernel = UtilsGetKernelModuleHandle();
 
-    BOOL(WINAPI * pReadFile)
-    (HANDLE hFile, LPVOID lpvBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped) = UtilsGetProcAddressByHash(ulKernel, 0x98cecdc9);
+    BOOL(WINAPI * pReadConsoleA)
+    (HANDLE hConsoleInput, LPVOID lpvBuffer, DWORD nNumberOfCharsToRead, LPDWORD lpNumberOfCharsRead, LPVOID pInputControl) = UtilsGetProcAddressByHash(ulKernel, 0x105413518);
 
-    return pReadFile(hFile, lpvBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
+    return pReadConsoleA(hConsoleInput, lpvBuffer, nNumberOfCharsToRead, lpNumberOfCharsRead, pInputControl);
+}
+
+BOOL UtilsWriteConsoleA(HANDLE hConsoleOuput, const VOID *lpBuffer, DWORD nNumberOfCharsToWrite, LPDWORD lpNumberOfCharsWritten, LPVOID lpReserved)
+{
+    ULONG_PTR ulKernel = UtilsGetKernelModuleHandle();
+
+    BOOL(WINAPI * pWriteConsoleA)
+    (HANDLE hConsoleOuput, const VOID *lpBuffer, DWORD nNumberOfCharsToWrite, LPDWORD lpNumberOfCharsWritten, LPVOID lpReserved) = UtilsGetProcAddressByHash(ulKernel, 0x130258647);
+
+    return pWriteConsoleA(hConsoleOuput, lpBuffer, nNumberOfCharsToWrite, lpNumberOfCharsWritten, lpReserved);
 }
 
 HANDLE UtilsCreateToolhelp32Snapshot(DWORD dwFlags, DWORD dwTh32ProcessID)
