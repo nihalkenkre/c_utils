@@ -99,14 +99,24 @@ HANDLE UtilsOpenProcess(DWORD dwDesiredAccess, BOOL bInheritHandle, DWORD dwProc
     return pOpenProcess(dwDesiredAccess, bInheritHandle, dwProcessId);
 }
 
-BOOL UtilsWriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOveralapped)
+BOOL UtilsWriteFile(HANDLE hFile, LPCVOID lpcvBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOveralapped)
 {
     ULONG_PTR uiKernel = UtilsGetKernelModuleHandle();
 
     BOOL(WINAPI * pWriteFile)
     (HANDLE hFile, LPCVOID lpbuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped) = UtilsGetProcAddressByHash(uiKernel, 0xbcb937e0);
 
-    return pWriteFile(hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOveralapped);
+    return pWriteFile(hFile, lpcvBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOveralapped);
+}
+
+BOOL UtilsReadFile(HANDLE hFile, LPVOID lpvBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped)
+{
+    ULONG_PTR ulKernel = UtilsGetKernelModuleHandle();
+
+    BOOL(WINAPI * pReadFile)
+    (HANDLE hFile, LPVOID lpvBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped) = UtilsGetProcAddressByHash(ulKernel, 0x98cecdc9);
+
+    return pReadFile(hFile, lpvBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
 }
 
 HANDLE UtilsCreateToolhelp32Snapshot(DWORD dwFlags, DWORD dwTh32ProcessID)
