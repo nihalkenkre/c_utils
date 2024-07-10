@@ -242,6 +242,16 @@ BOOL UtilsVirtualFree(LPVOID lpAddress, SIZE_T dwSize, DWORD dwFreeType)
     return pVirtualFree(lpAddress, 0, MEM_RELEASE);
 }
 
+BOOL UtilsVirtualFreeEx(HANDLE hProcess, LPVOID lpAddress, SIZE_T dwSize, DWORD dwFreeType)
+{
+    ULONG_PTR ulKernel = UtilsGetKernelModuleHandle();
+
+    BOOL(WINAPI * pVirtualFreeEx)
+    (HANDLE hProcess, LPVOID lpAddress, SIZE_T dwSize, DWORD dwFreeType) = UtilsGetProcAddressByHash(ulKernel, 0x13e30bbff);
+
+    return pVirtualFreeEx(hProcess, lpAddress, 0, MEM_RELEASE);
+}
+
 INT UtilsWideCharToMultiByte(UINT CodePage, DWORD dwFlags, LPCWCH lpWideCharStr, int cchWideChar, LPSTR lpMultiByteStr, int cbMultiByte, LPCCH lpDefaultChar, LPBOOL lpUseDefaultChar)
 {
     ULONG_PTR ulKernel = UtilsGetKernelModuleHandle();
@@ -303,6 +313,16 @@ BOOL UtilsVirtualProtect(LPVOID lpAddress, SIZE_T dwSize, DWORD flNewProtect, PD
     return pVirtualProtect(lpAddress, dwSize, flNewProtect, lpfOldProtect);
 }
 
+BOOL UtilsVirtualProtectEx(HANDLE hProcess, LPVOID lpAddress, SIZE_T dwSize, DWORD flNewProtect, PDWORD lpfOldProtect)
+{
+    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
+
+    BOOL(WINAPI * pVirtualProtectEx)
+    (HANDLE hProcess, LPVOID lpAddress, SIZE_T dwSize, DWORD flNewProtect, PDWORD lpfOldProtect) = UtilsGetProcAddressByHash(hKernel, 0x1a1ae98a1);
+
+    return pVirtualProtectEx(hProcess, lpAddress, dwSize, flNewProtect, lpfOldProtect);
+}
+
 void UtilsSleep(DWORD dwMilliseconds)
 {
     ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
@@ -329,7 +349,6 @@ void UtilsOutputDebugStringW(LPCWSTR lpOutputString)
 
     pOutputDebugStringW(lpOutputString);
 }
-
 
 void UtilsMemCpy(LPCVOID lpvSrc, LPVOID lpvDst, SIZE_T nBytes)
 {
