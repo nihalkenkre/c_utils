@@ -470,7 +470,7 @@ BOOL UtilsStrCmpiAW(PCSTR sStr1, PCWSTR sStr2)
 {
     BOOL bAreEqual = TRUE;
 
-    for (SIZE_T i = 0; i < UtilsStrLen(sStr1); ++i)
+    while (sStr1[i] != 0)
     {
         if (sStr1[i] != sStr2[i])
         {
@@ -491,6 +491,8 @@ BOOL UtilsStrCmpiAW(PCSTR sStr1, PCWSTR sStr2)
                 }
             }
         }
+
+        ++i;
     }
 
     return bAreEqual;
@@ -516,7 +518,7 @@ BOOL UtilsStrCmpiAA(PCSTR sStr1, PCSTR sStr2)
 {
     BOOL bAreEqual = TRUE;
 
-    for (SIZE_T i = 0; i < UtilsStrLen(sStr1); ++i)
+    while (sStr1[i] != 0)
     {
         if (sStr1[i] != sStr2[i])
         {
@@ -537,9 +539,59 @@ BOOL UtilsStrCmpiAA(PCSTR sStr1, PCSTR sStr2)
                 }
             }
         }
+
+        ++i;
     }
 
     return bAreEqual;
+}
+
+BOOL UtilsStrCmpiWW(PCWSTR wsStr1, PCWSTR wsStr2)
+{
+    BOOL bAreEqual = TRUE;
+
+    while (wsStr1[i] != 0)
+    {
+        if (wsStr1[i] != wsStr2[i])
+        {
+            if (wsStr1[i] < wsStr2[i])
+            {
+                if ((wsStr1[i] + 32) != wsStr2[i])
+                {
+                    bAreEqual = FALSE;
+                    break;
+                }
+            }
+            else if (wsStr2[i] < wsStr1[i])
+            {
+                if ((wsStr2[i] + 32) != wsStr1[i])
+                {
+                    bAreEqual = FALSE;
+                    break;
+                }
+            }
+        }
+
+        ++i;
+    }
+
+    return bAreEqual;
+}
+
+BOOL UtilsStrCmpWW(PCWSTR wsStr1, PCWSTR wsStr2)
+{
+    SIZE_T i = 0;
+
+    while (wsStr1[i] == wsStr2[i])
+    {
+        if (wsStr1[i] == 0 && wsStr2[i] == 0)
+        {
+            return TRUE;
+        }
+        ++i;
+    }
+
+    return FALSE;
 }
 
 LPVOID UtilsStrChr(PCSTR sStr, int iCh)
