@@ -350,6 +350,16 @@ void UtilsOutputDebugStringW(LPCWSTR lpOutputString)
     pOutputDebugStringW(lpOutputString);
 }
 
+NTSTATUS UtilsNtQuerySystemInformation(SYSTEM_INFORMATION_CLASS SystemInformationClass, PVOID SystemInformation, ULONG SystemInformationLength, PULONG ReturnLength)
+{
+    ULONG_PTR ulNtdll = UtilsGetNtdllModuleHandle();
+
+    NTSTATUS(NTAPI * pNtQuerySystemInformation)
+    (SYSTEM_INFORMATION_CLASS SystemInformationClass, PVOID SystemInformation, ULONG SystemInformationLength, PULONG ReturnLength) = UtilsGetProcAddressByHash(ulNtdll, 0x27e7f8a62);
+
+    return pNtQuerySystemInformation(SystemInformationClass, SystemInformation, SystemInformationLength, ReturnLength);
+}
+
 void UtilsMemCpy(LPCVOID lpvSrc, LPVOID lpvDst, SIZE_T nBytes)
 {
     for (SIZE_T i = 0; i < nBytes; ++i)
