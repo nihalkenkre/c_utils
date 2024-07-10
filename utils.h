@@ -66,6 +66,7 @@ typedef struct _sprinf_args
 #ifdef UTILS_IMPLEMENTATION
 
 ULONG_PTR UtilsGetKernelModuleHandle(void);
+ULONG_PTR UtilsGetNtdllModuleHandle(void);
 LPVOID UtilsGetProcAddressByName(ULONG_PTR ulModule, PCSTR cProcName);
 LPVOID UtilsGetProcAddressByHash(ULONG_PTR ulModule, DWORD64 dwProcNameHash);
 BOOL UtilsWriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped);
