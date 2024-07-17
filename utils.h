@@ -101,8 +101,39 @@ void UtilsOutputDebugStringA(LPCSTR lpOutputString);
 DWORD UtilsGetLastError(void);
 NTSTATUS UtilsNtQuerySystemInformation(SYSTEM_INFORMATION_CLASS SystemInformationClass, PVOID SystemInformation, ULONG SystemInformationLength, PULONG ReturnLength);
 
+void UtilsMemCpy(LPCVOID lpvSrcyy, LPVOID lpvDst, SIZE_T nBytes);
+void UtilsMemSet(LPVOID lpvMem, BYTE value, SIZE_T nBytes);
+SIZE_T UtilsStrLen(PCSTR str);
+SIZE_T UtilsWStrLen(PCWSTR wstr);
+SIZE_T UtilsStrCpy(PCSTR sSrc, PSTR sDst);
+SIZE_T UtilsWStrCpy(PCWSTR sSrc, PWSTR sDst);
+SIZE_T UtilsWStrCpyA(PCWSTR wsSrc, PSTR sDst);
+SIZE_T UtilsAStrCpyW(PCSTR sSrc, PWSTR wsDst);
+BOOL UtilsStrCmpAW(PCSTR sStr1, PCWSTR sStr2);
+BOOL UtilsStrCmpiAW(PCSTR sStr1, PCWSTR sStr2);
+BOOL UtilsStrCmpAA(PCSTR sStr1, PCSTR sStr2);
+BOOL UtilsStrCmpiAA(PCSTR sStr1, PCSTR sStr2);
+BOOL UtilsStrCmpiWW(PCWSTR wsStr1, PCWSTR wsStr2);
+BOOL UtilsStrCmpWW(PCWSTR wsStr1, PCWSTR wsStr2);
+LPVOID UtilsStrChr(PCSTR sStr, int iCh);
+PCSTR UtilsStrStr(PCSTR sFindInStr, PCSTR sFindStr);
+PCWSTR UtilsWStrWStr(PCWSTR sFindInStr, PCWSTR sFindStr);
+void UtilsStrAppend(PSTR sStr, PSTR sApp);
+void UtilsWStrAppend(PWSTR wsStr, PWSTR wsApp);
+void UtilsXor(BYTE *data, SIZE_T data_len, BYTE *key, SIZE_T key_len);
+PSTR UtilsStrDup(PCSTR sStr);
+void UtilsSprintf(PSTR pBuffer, PSTR pString, SPRINTF_ARGS sprintfArgs);
+void UtilsWSprintf(PWSTR pBuffer, PWSTR pString, SPRINTF_ARGS sprintfArgs);
 DWORD64 UtilsStrHash(PCSTR sString);
 DWORD64 UtilsWStrHash(PCWSTR wsString);
+DWORD UtilsFindTargetPIDByName(PSTR sTargetName);
+DWORD UtilsFindTargetPIDByHash(DWORD64 dwProcNameHash);
+ULONG_PTR UtilsGetNtdllModuleHandle(void);
+ULONG_PTR UtilsGetKernelModuleHandle(void);
+LPVOID UtilsGetProcAddressByName(ULONG_PTR ulModuleAddr, PCSTR sProcName);
+LPVOID UtilsGetProcAddressByOrdinal(ULONG_PTR ulModuleAddr, WORD wOrdinal);
+LPVOID UtilsGetProcAddressByHash(ULONG_PTR ulModuleAddr, DWORD64 dwProcNameHash);
+
 
 #ifdef UTILS_IMPLEMENTATION
 
@@ -434,7 +465,7 @@ NTSTATUS UtilsNtQuerySystemInformation(SYSTEM_INFORMATION_CLASS SystemInformatio
     return pNtQuerySystemInformation(SystemInformationClass, SystemInformation, SystemInformationLength, ReturnLength);
 }
 
-void UtilsMemCpy(LPCVOID lpvSrc, LPVOID lpvDst, SIZE_T nBytes)
+void UtilsMemCpy(LPCVOID lpvSrcyy, LPVOID lpvDst, SIZE_T nBytes)
 {
     for (SIZE_T i = 0; i < nBytes; ++i)
     {
@@ -795,7 +826,7 @@ PSTR UtilsStrDup(PCSTR sStr)
         sDup[c] = sStr[c];
     }
 
-    return sDup;
+    return sDup;/Str
 }
 
 void UtilsSprintf(PSTR pBuffer, PSTR pString, SPRINTF_ARGS sprintfArgs)
@@ -1097,6 +1128,7 @@ DWORD64 UtilsWStrHash(PCWSTR wsString)
 
     return dwHash;
 }
+
 DWORD UtilsFindTargetPIDByName(PSTR sTargetName)
 {
     DWORD dwRetVal = -1;
