@@ -993,6 +993,77 @@ void UtilsWSprintf(PWSTR pBuffer, PWSTR pString, SPRINTF_ARGS sprintfArgs)
     pBuffer[bufferIndex] = pString[stringIndex]; // copy trailing zero
 }
 
+DWORD64 UtilsStrHash(PCSTR sString)
+{
+    SIZE_T sStrlen = UtilsStrLen(sString);
+    UINT64 i = 0;
+    DWORD64 dwHash = 0;
+
+    while (i < sStrlen)
+    {
+        DWORD64 dwCurrentFold = sString[i];
+        dwCurrentFold <<= 8;
+
+        if (i + 1 < sStrlen)
+        {
+            dwCurrentFold |= sString[i + 1];
+            dwCurrentFold <<= 8;
+        }
+
+        if (i + 2 < sStrlen)
+        {
+            dwCurrentFold |= sString[i + 2];
+            dwCurrentFold <<= 8;
+        }
+
+        if (i + 3 < sStrlen)
+        {
+            dwCurrentFold |= sString[i + 3];
+        }
+
+        dwHash += dwCurrentFold;
+
+        i += 4;
+    }
+
+    return dwHash;
+}
+
+DWORD64 UtilsWStrHash(PCWSTR wsString)
+{
+    SIZE_T wsStrlen = UtilsWStrLen(wsString);
+    UINT64 i = 0;
+    DWORD64 dwHash = 0;
+
+    while (i < wsStrlen)
+    {
+        DWORD64 dwCurrentFold = wsString[i];
+        dwCurrentFold <<= 8;
+
+        if (i + 1 < wsStrlen)
+        {
+            dwCurrentFold |= wsString[i + 1];
+            dwCurrentFold <<= 8;
+        }
+
+        if (i + 2 < wsStrlen)
+        {
+            dwCurrentFold |= wsString[i + 2];
+            dwCurrentFold <<= 8;
+        }
+
+        if (i + 3 < wsStrlen)
+        {
+            dwCurrentFold |= wsString[i + 3];
+        }
+
+        dwHash += dwCurrentFold;
+
+        i += 4;
+    }
+
+    return dwHash;
+}
 DWORD UtilsFindTargetPIDByName(PSTR sTargetName)
 {
     DWORD dwRetVal = -1;
@@ -1152,7 +1223,44 @@ LPVOID UtilsGetProcAddressByName(ULONG_PTR ulModuleAddr, PCSTR sProcName)
         ++FunctionName;
 
         HMODULE ForwardedDLL = UtilsLoadLibraryA(DLLName);
-        lpvProcAddr = (ULONG_PTR)UtilsGetProcAddressByName((ULONG_PTR)ForwardedDLL, FunctionName);
+        lpvProcAddr = (ULONG_PTR)UtilsGetProcAddressByName((ULONG_PTR)ForwardedDLL, UtilsStrHash(FunctionName));
+    }
+
+    return (LPVOID)lpvProcAddr;
+}
+
+LPVOID UtilsGetProcAddressByOrdinal(ULONG_PTR ulModuleAddr, WORD wOrdinal)
+{
+    IMAGE_DOS_HEADER *DosHeader = (IMAGE_DOS_HEADER *)ulModuleAddr;
+    IMAGE_NT_HEADERS *NTHeaders = (IMAGE_NT_HEADERS *)(ulModuleAddr + DosHeader->e_lfanew);
+
+    IMAGE_DATA_DIRECTORY ExportDataDirectory = NTHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT];
+    IMAGE_EXPORT_DIRECTORY *ExportDirectory = (IMAGE_EXPORT_DIRECTORY *)(ulModuleAddr + ExportDataDirectory.VirtualAddress);
+
+    DWORD *AddressOfFunctions = (DWORD *)(ulModuleAddr + ExportDirectory->AddressOfFunctions);
+    DWORD *AddressOfNames = (DWORD *)(ulModuleAddr + ExportDirectory->AddressOfNames);
+    WORD *AddressOfNameOridinals = (WORD *)(ulModuleAddr + ExportDirectory->AddressOfNameOrdinals);
+
+    ULONG_PTR lpvProcAddr = 0;
+
+    if ((wOrdinal < (WORD)ExportDirectory->Base) && (wOrdinal >= (WORD)ExportDirectory->Base + ExportDirectory->NumberOfFunctions))
+    {
+        return (LPVOID)lpvProcAddr;
+    }
+
+    lpvProcAddr = ulModuleAddr + AddressOfFunctions[wOrdinal - ExportDirectory->Base];
+
+    if ((lpvProcAddr > (ulModuleAddr + ExportDataDirectory.VirtualAddress)) && (lpvProcAddr <= (ulModuleAddr + ExportDataDirectory.VirtualAddress + ExportDataDirectory.Size)))
+    {
+        CHAR DLLName[256];
+        UtilsStrCpy((PCSTR)lpvProcAddr, DLLName);
+        PSTR FunctionName = UtilsStrChr(DLLName, '.');
+
+        *FunctionName = 0;
+        ++FunctionName;
+
+        HMODULE ForwardedDLL = UtilsLoadLibraryA(DLLName);
+        lpvProcAddr = (ULONG_PTR)UtilsGetProcAddressByHash((ULONG_PTR)ForwardedDLL, UtilsStrHash(FunctionName));
     }
 
     return (LPVOID)lpvProcAddr;
@@ -1191,81 +1299,10 @@ LPVOID UtilsGetProcAddressByHash(ULONG_PTR ulModuleAddr, DWORD64 dwProcNameHash)
         ++FunctionName;
 
         HMODULE ForwardedDLL = UtilsLoadLibraryA(DLLName);
-        lpvProcAddr = (ULONG_PTR)UtilsGetProcAddressByName((ULONG_PTR)ForwardedDLL, FunctionName);
+        lpvProcAddr = (ULONG_PTR)UtilsGetProcAddressByHash((ULONG_PTR)ForwardedDLL, UtilsStrHash(FunctionName));
     }
 
     return (LPVOID)lpvProcAddr;
 }
 
-DWORD64 UtilsStrHash(PCSTR sString)
-{
-    SIZE_T sStrlen = UtilsStrLen(sString);
-    UINT64 i = 0;
-    DWORD64 dwHash = 0;
-
-    while (i < sStrlen)
-    {
-        DWORD64 dwCurrentFold = sString[i];
-        dwCurrentFold <<= 8;
-
-        if (i + 1 < sStrlen)
-        {
-            dwCurrentFold |= sString[i + 1];
-            dwCurrentFold <<= 8;
-        }
-
-        if (i + 2 < sStrlen)
-        {
-            dwCurrentFold |= sString[i + 2];
-            dwCurrentFold <<= 8;
-        }
-
-        if (i + 3 < sStrlen)
-        {
-            dwCurrentFold |= sString[i + 3];
-        }
-
-        dwHash += dwCurrentFold;
-
-        i += 4;
-    }
-
-    return dwHash;
-}
-
-DWORD64 UtilsWStrHash(PCWSTR wsString)
-{
-    SIZE_T wsStrlen = UtilsWStrLen(wsString);
-    UINT64 i = 0;
-    DWORD64 dwHash = 0;
-
-    while (i < wsStrlen)
-    {
-        DWORD64 dwCurrentFold = wsString[i];
-        dwCurrentFold <<= 8;
-
-        if (i + 1 < wsStrlen)
-        {
-            dwCurrentFold |= wsString[i + 1];
-            dwCurrentFold <<= 8;
-        }
-
-        if (i + 2 < wsStrlen)
-        {
-            dwCurrentFold |= wsString[i + 2];
-            dwCurrentFold <<= 8;
-        }
-
-        if (i + 3 < wsStrlen)
-        {
-            dwCurrentFold |= wsString[i + 3];
-        }
-
-        dwHash += dwCurrentFold;
-
-        i += 4;
-    }
-
-    return dwHash;
-}
 #endif // UITLS_IMPLEMENTATION

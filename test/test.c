@@ -83,13 +83,15 @@ int main()
     LPVOID lpvProcAddr = UtilsGetProcAddressByHash(ulKernel, 0x138374e18);
     lpvProcAddr = UtilsGetProcAddressByHash(ulKernel, 0x1055647d1);
     lpvProcAddr = UtilsGetProcAddressByHash(ulKernel, 0x25290982b);
+    lpvProcAddr = UtilsGetProcAddressByOrdinal(ulKernel, 0xA);
 
     ULONG_PTR ulNtdll = UtilsGetNtdllModuleHandle();
 
     DWORD dwBytes = 0;
     CHAR cInput[MAX_PATH];
 
-    UtilsWriteConsoleA(UtilsGetStdHandle(STD_OUTPUT_HANDLE), "1 or 2: ", 10, &dwBytes, NULL);
+    CHAR c1or2[] = {'1', ' ', 'o', 'r', ' ', '2', ':', ' ', 0};
+    UtilsWriteConsoleA(UtilsGetStdHandle(STD_OUTPUT_HANDLE), c1or2, UtilsStrLen(c1or2), &dwBytes, NULL);
     UtilsReadConsoleA(UtilsGetStdHandle(STD_INPUT_HANDLE), cInput, MAX_PATH, &dwBytes, NULL);
 
     WCHAR wcDude[] = {'D', 'u', 'd', 'e', 0};
