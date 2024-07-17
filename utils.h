@@ -332,7 +332,7 @@ HANDLE UtilsCreateFileA(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShared
     ULONG_PTR ulKernel = UtilsGetKernelModuleHandle();
 
     HANDLE(WINAPI * pCreateFileA)
-    (LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwSharedMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile) = UtilsGetProcAddressByHash(ulKernel, 0xb84410ca);
+    (LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwSharedMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile) = UtilsGetProcAddressByHash(ulKernel, 0x1243cecca);
 
     return pCreateFileA(lpFileName, dwDesiredAccess, dwSharedMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
 }
