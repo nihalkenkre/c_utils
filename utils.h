@@ -1223,7 +1223,7 @@ LPVOID UtilsGetProcAddressByName(ULONG_PTR ulModuleAddr, PCSTR sProcName)
         ++FunctionName;
 
         HMODULE ForwardedDLL = UtilsLoadLibraryA(DLLName);
-        lpvProcAddr = (ULONG_PTR)UtilsGetProcAddressByName((ULONG_PTR)ForwardedDLL, UtilsStrHash(FunctionName));
+        lpvProcAddr = (ULONG_PTR)UtilsGetProcAddressByHash((ULONG_PTR)ForwardedDLL, UtilsStrHash(FunctionName));
     }
 
     return (LPVOID)lpvProcAddr;
