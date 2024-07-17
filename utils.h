@@ -263,7 +263,7 @@ INT UtilsWideCharToMultiByte(UINT CodePage, DWORD dwFlags, LPCWCH lpWideCharStr,
     return pWideCharToMultiByte(CodePage, dwFlags, lpWideCharStr, cchWideChar, lpMultiByteStr, cbMultiByte, lpDefaultChar, lpUseDefaultChar);
 }
 
-HANDLE UtilsCreateFile(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwSharedMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)
+HANDLE UtilsCreateFileA(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwSharedMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)
 {
     ULONG_PTR ulKernel = UtilsGetKernelModuleHandle();
 
@@ -271,6 +271,36 @@ HANDLE UtilsCreateFile(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwSharedM
     (LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwSharedMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile) = UtilsGetProcAddressByHash(ulKernel, 0xb84410ca);
 
     return pCreateFileA(lpFileName, dwDesiredAccess, dwSharedMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
+}
+
+HANDLE UtilsCreateFileMappingA(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttributes, DWORD flProtect, DWORD dwMaximumSizeHigh, DWORD dwMaximumSizeLow, LPCSTR lpName)
+{
+    ULONG_PTR ulKernel = UtilsGetKernelModuleHandle();
+
+    HANDLE(WINAPI * pCreateFileMappingA)
+    (HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttributes, DWORD flProtect, DWORD dwMaximumSizeHigh, DWORD dwMaximumSizeLow, LPCSTR lpName) = UtilsGetProcAddressByHash(ulKernel, 0x19514a399);
+
+    return pCreateFileMappingA(hFile, lpFileMappingAttributes, flProtect, dwMaximumSizeHigh, dwMaximumSizeLow, lpName);
+}
+
+HANDLE UtilsMapViewOfFile(HANDLE hFileMappingObject, DWORD dwDesiredAccess, DWORD dwFileOffsetHigh, DWORD dwFileOffsetLow, SIZE_T dwNumberOfBytesToMap)
+{
+    ULONG_PTR ulKernel = UtilsGetKernelModuleHandle();
+
+    LPVOID(WINAPI * pMapViewOfFile)
+    (HANDLE hFileMappingObject, DWORD dwDesiredAccess, DWORD dwFileOffsetHigh, DWORD dwFileOffsetLow, SIZE_T dwNumberOfBytesToMap) = UtilsGetProcAddressByHash(ulKernel, 0x11d0db611);
+
+    return pMapViewOfFile(hFileMappingObject, dwDesiredAccess, dwFileOffsetHigh, dwFileOffsetLow, dwNumberOfBytesToMap);
+}
+
+BOOL UtilsUnmapViewOfFile(LPCVOID lpBaseAddress)
+{
+    ULONG_PTR ulKernel = UtilsGetKernelModuleHandle();
+
+    BOOL(WINAPI * pUnmapViewOfFile)
+    (LPCVOID lpBaseAddress) = UtilsGetProcAddressByHash(ulKernel, 0x1a680a20c);
+
+    return pUnmapViewOfFile(lpBaseAddress);
 }
 
 HANDLE UtilsCreateRemoteThread(HANDLE hProcess, LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId)
