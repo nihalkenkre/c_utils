@@ -465,7 +465,7 @@ NTSTATUS UtilsNtQuerySystemInformation(SYSTEM_INFORMATION_CLASS SystemInformatio
     return pNtQuerySystemInformation(SystemInformationClass, SystemInformation, SystemInformationLength, ReturnLength);
 }
 
-void UtilsMemCpy(LPCVOID lpvSrcyy, LPVOID lpvDst, SIZE_T nBytes)
+void UtilsMemCpy(LPCVOID lpvSrc, LPVOID lpvDst, SIZE_T nBytes)
 {
     for (SIZE_T i = 0; i < nBytes; ++i)
     {
@@ -826,7 +826,7 @@ PSTR UtilsStrDup(PCSTR sStr)
         sDup[c] = sStr[c];
     }
 
-    return sDup;/Str
+    return sDup;
 }
 
 void UtilsSprintf(PSTR pBuffer, PSTR pString, SPRINTF_ARGS sprintfArgs)
