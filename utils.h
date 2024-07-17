@@ -63,15 +63,48 @@ typedef struct _sprinf_args
     DWORD64 args[32];
 } SPRINTF_ARGS, *PSPRINTF_ARGS;
 
-#ifdef UTILS_IMPLEMENTATION
-
+HANDLE UtilsGetStdHandle(DWORD nStdHandle);
 ULONG_PTR UtilsGetKernelModuleHandle(void);
 ULONG_PTR UtilsGetNtdllModuleHandle(void);
 LPVOID UtilsGetProcAddressByName(ULONG_PTR ulModule, PCSTR cProcName);
 LPVOID UtilsGetProcAddressByHash(ULONG_PTR ulModule, DWORD64 dwProcNameHash);
 BOOL UtilsWriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped);
+HANDLE UtilsOpenProcess(DWORD dwDesiredAccess, BOOL bInheritHandle, DWORD dwProcessId);
+BOOL UtilsReadFile(HANDLE hFile, LPVOID lpvBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped);
+BOOL UtilsWriteFile(HANDLE hFile, LPCVOID lpcvBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOveralapped);
+BOOL UtilsReadConsoleA(HANDLE hConsoleInput, LPVOID lpvBuffer, DWORD nNumberOfCharsToRead, LPDWORD lpNumberOfCharsRead, LPVOID pInputControl);
+BOOL UtilsWriteConsoleA(HANDLE hConsoleOuput, const VOID *lpBuffer, DWORD nNumberOfCharsToWrite, LPDWORD lpNumberOfCharsWritten, LPVOID lpReserved);
+HANDLE UtilsCreateToolhelp32Snapshot(DWORD dwFlags, DWORD dwTh32ProcessID);
+BOOL UtilsProcess32First(HANDLE hSnapshot, LPPROCESSENTRY32 lppe);
+BOOL UtilsProcess32Next(HANDLE hSnapshot, LPPROCESSENTRY32 lppe);
+BOOL UtilsCloseHandle(HANDLE hHandle);
+HANDLE UtilsOpenThread(DWORD dwDesiredAccess, BOOL bInherhitHandle, DWORD dwThreadID);
+HANDLE UtilsLoadLibraryA(LPCSTR lpLibFileName);
+LPVOID UtilsVirtualAlloc(PVOID lpAddress, SIZE_T dwSize, DWORD flAllocationType, DWORD flProtect);
+LPVOID UtilsVirtualAllocEx(HANDLE hProcess, PVOID lpAddress, SIZE_T dwSize, DWORD flAllocationType, DWORD flProtect);
+BOOL UtilsWriteProcessMemory(HANDLE hProcess, LPVOID lpBaseAddress, LPCVOID lpBuffer, SIZE_T nSize, SIZE_T *lpNumberOfBytesWritten);
+DWORD UtilsResumeThread(HANDLE hThread);
+BOOL UtilsVirtualFree(LPVOID lpAddress, SIZE_T dwSize, DWORD dwFreeType);
+BOOL UtilsVirtualFreeEx(HANDLE hProcess, LPVOID lpAddress, SIZE_T dwSize, DWORD dwFreeType);
+INT UtilsWideCharToMultiByte(UINT CodePage, DWORD dwFlags, LPCWCH lpWideCharStr, int cchWideChar, LPSTR lpMultiByteStr, int cbMultiByte, LPCCH lpDefaultChar, LPBOOL lpUseDefaultChar);
+HANDLE UtilsCreateFileA(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwSharedMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile);
+HANDLE UtilsCreateFileMappingA(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttributes, DWORD flProtect, DWORD dwMaximumSizeHigh, DWORD dwMaximumSizeLow, LPCSTR lpName);
+HANDLE UtilsMapViewOfFile(HANDLE hFileMappingObject, DWORD dwDesiredAccess, DWORD dwFileOffsetHigh, DWORD dwFileOffsetLow, SIZE_T dwNumberOfBytesToMap);
+BOOL UtilsUnmapViewOfFile(LPCVOID lpBaseAddress);
+HANDLE UtilsCreateRemoteThread(HANDLE hProcess, LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId);
+HANDLE UtilsGetModuleHandleA(LPCSTR lpModuleName);
+PVOID UtilsImageDirectoryEntryToDataEx(PVOID Base, BOOLEAN MappedAsImage, USHORT DirectoryEntry, PULONG Size, PIMAGE_SECTION_HEADER *FoundHeader);
+BOOL UtilsVirtualProtect(LPVOID lpAddress, SIZE_T dwSize, DWORD flNewProtect, PDWORD lpfOldProtect);
+BOOL UtilsVirtualProtectEx(HANDLE hProcess, LPVOID lpAddress, SIZE_T dwSize, DWORD flNewProtect, PDWORD lpfOldProtect);
+void UtilsSleep(DWORD dwMilliseconds);
+void UtilsOutputDebugStringA(LPCSTR lpOutputString);
+DWORD UtilsGetLastError(void);
+NTSTATUS UtilsNtQuerySystemInformation(SYSTEM_INFORMATION_CLASS SystemInformationClass, PVOID SystemInformation, ULONG SystemInformationLength, PULONG ReturnLength);
+
 DWORD64 UtilsStrHash(PCSTR sString);
 DWORD64 UtilsWStrHash(PCWSTR wsString);
+
+#ifdef UTILS_IMPLEMENTATION
 
 HANDLE UtilsGetStdHandle(DWORD nStdHandle)
 {
