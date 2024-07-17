@@ -381,6 +381,16 @@ void UtilsOutputDebugStringW(LPCWSTR lpOutputString)
     pOutputDebugStringW(lpOutputString);
 }
 
+DWORD UtilsGetLastError(void)
+{
+    ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
+
+    DWORD(WINAPI * pGetLastError)
+    () = UtilsGetProcAddressByHash(hKernel, 0x11b4b5803);
+
+    return pGetLastError();
+}
+
 NTSTATUS UtilsNtQuerySystemInformation(SYSTEM_INFORMATION_CLASS SystemInformationClass, PVOID SystemInformation, ULONG SystemInformationLength, PULONG ReturnLength)
 {
     ULONG_PTR ulNtdll = UtilsGetNtdllModuleHandle();
