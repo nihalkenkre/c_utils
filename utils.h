@@ -115,7 +115,7 @@ BOOL UtilsStrCmpAA(PCSTR sStr1, PCSTR sStr2);
 BOOL UtilsStrCmpiAA(PCSTR sStr1, PCSTR sStr2);
 BOOL UtilsStrCmpiWW(PCWSTR wsStr1, PCWSTR wsStr2);
 BOOL UtilsStrCmpWW(PCWSTR wsStr1, PCWSTR wsStr2);
-LPVOID UtilsStrChr(PCSTR sStr, int iCh);
+PCSTR UtilsStrChr(PCSTR sStr, int iCh);
 PCSTR UtilsStrStr(PCSTR sFindInStr, PCSTR sFindStr);
 PCWSTR UtilsWStrWStr(PCWSTR sFindInStr, PCWSTR sFindStr);
 void UtilsStrAppend(PSTR sStr, PSTR sApp);
