@@ -700,7 +700,7 @@ BOOL UtilsStrCmpWW(PCWSTR wsStr1, PCWSTR wsStr2)
     return FALSE;
 }
 
-LPVOID UtilsStrChr(PCSTR sStr, int iCh)
+PCSTR UtilsStrChr(PCSTR sStr, int iCh)
 {
     SIZE_T i = 0;
     while (sStr[i] != 0)
@@ -711,7 +711,7 @@ LPVOID UtilsStrChr(PCSTR sStr, int iCh)
         ++i;
     }
 
-    return (LPVOID)-1;
+    return NULL;
 }
 
 PCSTR UtilsStrStr(PCSTR sFindInStr, PCSTR sFindStr)
@@ -741,7 +741,7 @@ PCSTR UtilsStrStr(PCSTR sFindInStr, PCSTR sFindStr)
         }
     }
 
-    return 0;
+    return NULL;
 }
 
 PCWSTR UtilsWStrWStr(PCWSTR sFindInStr, PCWSTR sFindStr)
@@ -771,7 +771,7 @@ PCWSTR UtilsWStrWStr(PCWSTR sFindInStr, PCWSTR sFindStr)
         }
     }
 
-    return 0;
+    return NULL;
 }
 
 void UtilsStrAppend(PSTR sStr, PSTR sApp)
