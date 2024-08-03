@@ -92,7 +92,7 @@ int main()
 
     CHAR c1or2[] = {'1', ' ', 'o', 'r', ' ', '2', ':', ' ', 0};
     UtilsWriteConsoleA(UtilsGetStdHandle(STD_OUTPUT_HANDLE), c1or2, UtilsStrLen(c1or2), &dwBytes, NULL);
-    UtilsReadConsoleA(UtilsGetStdHandle(STD_INPUT_HANDLE), cInput, MAX_PATH, &dwBytes, NULL);
+    // UtilsReadConsoleA(UtilsGetStdHandle(STD_INPUT_HANDLE), cInput, MAX_PATH, &dwBytes, NULL);
 
     WCHAR wcDude[] = {'D', 'u', 'd', 'e', 0};
     UNICODE_STRING uString;
@@ -106,6 +106,8 @@ int main()
     CHAR cUnicodeTest[] = {'%', 'U', 0};
     UtilsSprintf(cSprintfBuffer, cUnicodeTest, sprintfArgs);
     UtilsOutputDebugStringA(cSprintfBuffer);
+
+    DWORD dwTID = UtilsFindTargetTID(dwTargetPid);
 
     return 0;
 }

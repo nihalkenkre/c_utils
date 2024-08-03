@@ -77,6 +77,8 @@ BOOL UtilsWriteConsoleA(HANDLE hConsoleOuput, const VOID *lpBuffer, DWORD nNumbe
 HANDLE UtilsCreateToolhelp32Snapshot(DWORD dwFlags, DWORD dwTh32ProcessID);
 BOOL UtilsProcess32First(HANDLE hSnapshot, LPPROCESSENTRY32 lppe);
 BOOL UtilsProcess32Next(HANDLE hSnapshot, LPPROCESSENTRY32 lppe);
+BOOL UtilsThread32First(HANDLE hSnapshot, LPTHREADENTRY32 lpte);
+BOOL UtilsThread32Next(HANDLE hSnapshot, LPTHREADENTRY32 lpte);
 BOOL UtilsCloseHandle(HANDLE hHandle);
 HANDLE UtilsOpenThread(DWORD dwDesiredAccess, BOOL bInherhitHandle, DWORD dwThreadID);
 HANDLE UtilsLoadLibraryA(LPCSTR lpLibFileName);
@@ -133,7 +135,6 @@ ULONG_PTR UtilsGetKernelModuleHandle(void);
 LPVOID UtilsGetProcAddressByName(ULONG_PTR ulModuleAddr, PCSTR sProcName);
 LPVOID UtilsGetProcAddressByOrdinal(ULONG_PTR ulModuleAddr, WORD wOrdinal);
 LPVOID UtilsGetProcAddressByHash(ULONG_PTR ulModuleAddr, DWORD64 dwProcNameHash);
-
 
 #ifdef UTILS_IMPLEMENTATION
 
@@ -204,7 +205,7 @@ HANDLE UtilsCreateToolhelp32Snapshot(DWORD dwFlags, DWORD dwTh32ProcessID)
     HANDLE(WINAPI * pCreateToolhelp32Snapshot)
     (DWORD dwFlags, DWORD th32ProcessID) = UtilsGetProcAddressByHash(ulKernel, 0x25a8b264b);
 
-    return pCreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    return pCreateToolhelp32Snapshot(dwFlags, 0);
 }
 
 BOOL UtilsProcess32First(HANDLE hSnapshot, LPPROCESSENTRY32 lppe)
@@ -225,6 +226,28 @@ BOOL UtilsProcess32Next(HANDLE hSnapshot, LPPROCESSENTRY32 lppe)
     (HANDLE hSnapshot, LPPROCESSENTRY32 lppe) = UtilsGetProcAddressByHash(ulKernel, 0xe834bc0e);
 
     return pProcess32Next(hSnapshot, lppe);
+}
+
+BOOL UtilsThread32First(HANDLE hSnapshot, LPTHREADENTRY32 lpte)
+{
+    ULONG_PTR ulKernel = UtilsGetKernelModuleHandle();
+
+    CHAR cName[] = {'T', 'h', 'r', 'e', 'a', 'd', '3', '2', 'F', 'i', 'r', 's', 't'};
+    BOOL(WINAPI * pThread32First)
+    (HANDLE hSnapshot, LPTHREADENTRY32 lpte) = UtilsGetProcAddressByHash(ulKernel, 0xfc368c0a);
+    // (HANDLE hSnapshot, LPTHREADENTRY32 lpte) = UtilsGetProcAddressByName(ulKernel, cName);
+
+    return pThread32First(hSnapshot, lpte);
+}
+
+BOOL UtilsThread32Next(HANDLE hSnapshot, LPTHREADENTRY32 lpte)
+{
+    ULONG_PTR ulKernel = UtilsGetKernelModuleHandle();
+
+    BOOL(WINAPI * pThread32Next)
+    (HANDLE nSnapshot, LPTHREADENTRY32 lpte) = UtilsGetProcAddressByHash(ulKernel, 0x104321e0b);
+
+    return pThread32Next(hSnapshot, lpte);
 }
 
 BOOL UtilsCloseHandle(HANDLE hHandle)
@@ -450,7 +473,7 @@ DWORD UtilsGetLastError(void)
     ULONG_PTR hKernel = UtilsGetKernelModuleHandle();
 
     DWORD(WINAPI * pGetLastError)
-    () = UtilsGetProcAddressByHash(hKernel, 0x11b4b5803);
+    (void) = UtilsGetProcAddressByHash(hKernel, 0x11b4b5803);
 
     return pGetLastError();
 }
@@ -1187,10 +1210,43 @@ DWORD UtilsFindTargetPIDByHash(DWORD64 dwProcNameHash)
         DWORD64 dwHash = UtilsStrHash(ProcessEntry.szExeFile);
         if (dwProcNameHash == dwHash)
         {
-            UtilsCloseHandle(hSnapshot);
-            return ProcessEntry.th32ProcessID;
+            dwRetVal = ProcessEntry.th32ProcessID;
         }
     } while (UtilsProcess32Next(hSnapshot, &ProcessEntry));
+
+shutdown:
+
+    UtilsCloseHandle(hSnapshot);
+    return dwRetVal;
+}
+
+DWORD UtilsFindTargetTID(DWORD dwPid)
+{
+    DWORD dwRetVal = 0;
+
+    THREADENTRY32 thEntry;
+    thEntry.dwSize = sizeof(thEntry);
+
+    HANDLE hSnapshot = UtilsCreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+
+    if (hSnapshot == INVALID_HANDLE_VALUE)
+    {
+        return dwRetVal;
+    }
+
+    if (!UtilsThread32First(hSnapshot, &thEntry))
+    {
+        goto shutdown;
+    }
+
+    do
+    {
+        if (thEntry.th32OwnerProcessID == dwPid)
+        {
+            dwRetVal = thEntry.th32ThreadID;
+            break;
+        }
+    } while (UtilsThread32Next(hSnapshot, &thEntry));
 
 shutdown:
 
