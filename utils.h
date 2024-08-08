@@ -1337,7 +1337,7 @@ LPVOID UtilsGetProcAddressByName(ULONG_PTR ulModuleAddr, PCSTR sProcName)
     {
         CHAR DLLName[256];
         UtilsStrCpy((PCSTR)lpvProcAddr, DLLName);
-        PSTR FunctionName = (PSTR)(UtilsStrChr(DLLName, '.');
+        PSTR FunctionName = (PSTR)UtilsStrChr(DLLName, '.');
 
         *FunctionName = 0;
         ++FunctionName;

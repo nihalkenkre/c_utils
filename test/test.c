@@ -56,7 +56,6 @@ int main()
     DWORD64 uiAge = 0xDEADBEEFBABECAFE;
 
     SPRINTF_ARGS sprintfArgs;
-    sprintfArgs.argsCount = 2;
     sprintfArgs.args[0] = wcName;
     sprintfArgs.args[1] = uiAge;
 
@@ -65,7 +64,6 @@ int main()
     WCHAR wcSprintfBuffer[128];
     WCHAR wcString[] = {'M', 'y', '\n', 'N', 'a', 'm', 'e', ':', ' ', '%', 's', 'b', ' ', 'K', 'e', 'n', 'k', 'r', 'e', '\n', 'A', 'g', 'e', ':', ' ', '%', 'x', '\n', 0};
 
-    sprintfArgs.argsCount = 2;
     sprintfArgs.args[0] = cName;
     sprintfArgs.args[1] = uiAge;
 
