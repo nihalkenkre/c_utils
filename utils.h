@@ -1337,7 +1337,7 @@ LPVOID UtilsGetProcAddressByName(ULONG_PTR ulModuleAddr, PCSTR sProcName)
     {
         CHAR DLLName[256];
         UtilsStrCpy((PCSTR)lpvProcAddr, DLLName);
-        PSTR FunctionName = UtilsStrChr(DLLName, '.');
+        PSTR FunctionName = (PSTR)(UtilsStrChr(DLLName, '.');
 
         *FunctionName = 0;
         ++FunctionName;
@@ -1374,7 +1374,7 @@ LPVOID UtilsGetProcAddressByOrdinal(ULONG_PTR ulModuleAddr, WORD wOrdinal)
     {
         CHAR DLLName[256];
         UtilsStrCpy((PCSTR)lpvProcAddr, DLLName);
-        PSTR FunctionName = UtilsStrChr(DLLName, '.');
+        PSTR FunctionName = (PSTR)UtilsStrChr(DLLName, '.');
 
         *FunctionName = 0;
         ++FunctionName;
@@ -1413,7 +1413,7 @@ LPVOID UtilsGetProcAddressByHash(ULONG_PTR ulModuleAddr, DWORD64 dwProcNameHash)
     {
         CHAR DLLName[256];
         UtilsStrCpy((PCSTR)lpvProcAddr, DLLName);
-        PSTR FunctionName = UtilsStrChr(DLLName, '.');
+        PSTR FunctionName = (PSTR)UtilsStrChr(DLLName, '.');
 
         *FunctionName = 0;
         ++FunctionName;
