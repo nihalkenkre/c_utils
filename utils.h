@@ -59,7 +59,6 @@ typedef enum _SECTION_INHERIT
 
 typedef struct _sprinf_args
 {
-    SIZE_T argsCount;
     DWORD64 args[32];
 } SPRINTF_ARGS, *PSPRINTF_ARGS;
 
